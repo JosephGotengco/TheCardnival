@@ -428,7 +428,9 @@ CARDBOMB FUNCTIONS START
 
  ******************************************************************************/
 
-app.get('/cardbomb', async (request, response) => {
+var cardbomb_game = null;
+
+async function cardbombNewgame(request, response){
     score = 0;
 
     try {
@@ -442,14 +444,18 @@ app.get('/cardbomb', async (request, response) => {
 	}
 	deck = await backend.getDeck(1);
         deck = await backend.shuffleDeck(deck.deck_id);
-        renderCardbombGame(request, response, "", null, cardback, 52, "");
+	card = await backend.drawDeck(deck.deck_id, 1);
+	cardbomb_game = true;
+        renderCardbombGame(request, response, "", card.cards[0].image, cardback, 52, "");
     } catch (e) {
         response.render('error.hbs',{
             error: e
         })
         console.log(e)
     }
-});
+}
+
+app.get('/cardbomb', cardbombNewgame);
 
 app.post('/cardbomb_raise', async (request, response) => {
     try {
@@ -515,11 +521,9 @@ async function cardbombRaise(request, response) {
         }
     }
     
-    if (card.remaining != 51) {
-        card = await backend.drawDeck(deck.deck_id, 1);
-    }
-    
-    if (card2.remaining > 0) {
+    card = await backend.drawDeck(deck.deck_id, 1);
+
+    if (card.remaining > 0) {
         renderCardbombGame(request, response, "", card.cards[0].image, cardback, card.remaining, `Raising ${add}!`);
     } else {
         var win_message = `Congratulations, you have finished the deck with ${score} points`;
@@ -528,6 +532,7 @@ async function cardbombRaise(request, response) {
             balance += score;
         }
         renderCardbombGame(request, response, "", card.cards[0].image, cardback, card.remaining, win_message)
+	cardbomb_game = null;
     }
 }
 
@@ -536,8 +541,9 @@ async function cardbombBoom(request, response) {
     if (current_user !== undefined) {
         lose_message = await backend.saveCardbombHighScore(current_user.uid, current_user.email, score, false);
     }
-    renderCardbombGame(request, response, "disabled", card.cards[0].image, cardback, card.remaining, lose_message);
     score = 0;
+    renderCardbombGame(request, response, "disabled", card.cards[0].image, cardback, card.remaining, lose_message); 
+    cardbomb_game = null;
 }
 
 async function cardbombLeave(request, response) {
@@ -547,8 +553,9 @@ async function cardbombLeave(request, response) {
         message = await backend.saveCardbombHighScore(current_user.uid, current_user.email, score, false);
         balance += score;
     }
-    renderCardbombGame(request, response, "disabled", card.cards[0].image, cardback, card.remaining, message);
     score = 0;
+    renderCardbombGame(request, response, "disabled", card.cards[0].image, cardback, card.remaining, message);
+    cardbomb_game = null;
 }
 
 /*****************************************************************************
