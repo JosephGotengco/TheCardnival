@@ -432,11 +432,20 @@ app.get('/cardbomb', async (request, response) => {
     score = 0;
 
     try {
+	if (current_user == undefined) {
+		response.render('login.hbs', {
+        		title: 'Big or Small | Login',
+        		nav_email: nav_email,
+       			balance: balance
+    		})
+		return;
+	}
+	deck = await backend.getDeck(1);
         deck = await backend.shuffleDeck(deck.deck_id);
         renderCardbombGame(request, response, "", null, cardback, 52, "");
     } catch (e) {
         response.render('error.hbs',{
-            error: error
+            error: e
         })
         console.log(e)
     }
@@ -457,7 +466,7 @@ app.post('/cardbomb_raise', async (request, response) => {
         }
     } catch (e) {
         response.render('error.hbs',{
-            error: error
+            error: e
         })
         console.log(e)
     }
@@ -468,7 +477,7 @@ app.post('/cardbomb_leavegame', async (request, response) => {
         cardbombLeave(request, response);
     } catch (e) {
         response.render('error.hbs',{
-            error: error
+            error: e
         })
         console.log(e)
     }
