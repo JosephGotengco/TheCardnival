@@ -602,7 +602,7 @@ app.get('/joker', async (request, response) => {
         var card_button = [];
         for (var i=0; i < card_param.length; i++){
             var card_button_obj = {
-                button: `<button class="button${i+1}" name="flip${i+1}">Flip</button>\n`,
+                button: `<button class="btn btn-sm btn-light ${i+1}" style="width: 90%; font-size: 14px" name="flip${i+1}">Flip</button>\n`,
                 button_id: i,
                 card: card_param[i]
             }
@@ -642,7 +642,7 @@ app.post('/newjoker', async (request, response) => {
         var card_button = [];
         for (var i=0; i < card_param.length; i++){
             var card_button_obj = {
-                button: `<button class="button${i+1}" name="flip${i+1}">Flip</button>\n`,
+                button: `<button class="btn btn-sm btn-light ${i+1}" style="width: 90%; font-size: 14px" name="flip${i+1}">Flip</button>\n`,
                 button_id: i,
                 card: card_param[i]
             }
@@ -699,7 +699,7 @@ app.post('/flip/:id', async (request, response) => {
             var card_button = [];
             for (var i=0; i < card_param.length; i++){
                 var card_button_obj = {
-                    button: `<button class="button${i+1}" name="flip${i+1}">Flip</button>\n`,
+                    button: `<button class="btn btn-sm btn-light ${i+1}" style="width: 90%; font-size: 14px" name="flip${i+1}">Flip</button>\n`,
                     button_id: i,
                     card: card_param[i]
                 }
