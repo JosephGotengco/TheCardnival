@@ -21,7 +21,8 @@ var addAccount = async (email, password, fname, lname) => {
     await firebase.auth().createUserWithEmailAndPassword(email, password)
             .then (async function success(userData) {
                 var user = userData.user
-                await writeUserData(user.uid, user.email, fname, lname, "default.jpg");
+                await writeUserData(user.uid, user.email, fname, lname, "default", 
+                    "https://firebasestorage.googleapis.com/v0/b/bigorsmall-9c0b5.appspot.com/o/default.jpg?alt=media&token=8579b809-6edc-442d-9363-c4a1688a4d1a");
                 await retrieveUserData(userData.user.uid)
             }).catch (function(error) {
               // Handle Errors here.
@@ -51,10 +52,7 @@ var loginAccount = async (email, password, result, response) => {
                 current_user = await retrieveUserData(userData.user.uid);
                 result.current_user = current_user;
                 result.current_user.uid = userData.user.uid;
-                deck = await getDeck(1);
-                result.deck = deck;
                 console.log('Login Successful')
-
                 return result
 
             }).catch (function(error) {
@@ -67,6 +65,20 @@ var loginAccount = async (email, password, result, response) => {
 
     return result
 };
+
+var deleteAccount = async () => {
+    var user = await firebase.auth().currentUser;
+    var uid = user.uid
+    message = user.delete().then(async function() {
+        await firebase.database().ref(`users/${uid}`).remove();
+        
+        return 'delete success'
+    }).catch(function(error){
+        return error.message
+    })
+    console.log(message);
+    return message
+}
 
 /*
     Saves username and their personal scores in JSON file and return
@@ -84,7 +96,7 @@ async function saveHighScore(userId, email, score, won) {
         .then(async function(snapshot) {
             test = await snapshot.val()
             test.big_or_small.games_played += 1;
-
+            test.balance += score;
             if (won) {
                 test.big_or_small.games_played += 1;
             }
@@ -132,26 +144,63 @@ async function getHighScores(game_name) {
     return sortable
 }
 
+
+
 /*****************************************************************************
 
     VOID() DATA SAVE/RETRIEVAL METHODS
 
 ******************************************************************************/
 
-async function writeUserData(userId, email, fname, lname, imageUrl) {
-  await firebase.database().ref(`users/${userId}`).set({
-    email: email,
-    profile_picture : imageUrl,
-    fname: fname,
-    lname: lname,
-    balance: 0,
-    prizes:[],
-    big_or_small: {
-        games_played: 0,
-        games_won: 0,
-        high_score: 0
-    }
-  });
+async function writeUserData(userId, email, fname, lname, name, imageUrl) {
+    await firebase.database().ref(`users/${userId}`).set({
+        email: email,
+        profile_picture : {
+            name: name,
+            url: imageUrl
+        },
+        music : {
+            name: `None`,
+            url: `None`
+        },
+        cardback: {
+            name: `red_cardback`,
+            url: `/img/cardbacks/red_cardback.png`
+        },
+        inventory : {
+            profile_pictures: [{
+                name: name,
+                url: imageUrl
+            }],
+            cardback:[{
+                name: 'red_cardback',
+                url: '/img/cardbacks/red_cardback.png'
+            }],
+            music:[{
+                name: 'none',
+                url: 'none'
+            }]
+        }, 
+        fname: fname,
+        lname: lname,
+        balance: 0,
+        prizes:[],
+        big_or_small: {
+            games_played: 0,
+            games_won: 0,
+            high_score: 0
+        },
+        cardbomb:{
+            games_played: 0,
+            games_won: 0,
+            high_score: 0
+        },
+        joker: {
+            games_played: 0,
+            games_won: 0,
+            high_score: 0
+        }
+    });
 }
 
 async function retrieveAllUsers(){
@@ -191,15 +240,79 @@ async function retrieveUserData(userId){
     return test
 }
 
-// async function retrieveImgUrl(filename){
-//     var spaceRef = storageRef.child(filename);
-//     console.log(spaceRef)
-//     storageRef.child(filename).getDownloadURL().then(function(url) {
-//         console.log(url)
-//     }).catch(function(error) {
+/*****************************************************************************
 
-//     });
-// }
+    ITEMS SHOP/INVENTORY FUNCTIONS
+
+******************************************************************************/
+
+/*
+    Saves username and their personal scores in JSON file and return
+    a high score results message depending on situation.
+ */
+async function buyItem(userId, itemId, itemUrl, type, price) {
+    var test = {}
+
+    message = await firebase.database().ref(`users/${userId}`).once('value')
+        .then(async function(snapshot) {
+            test = await snapshot.val()
+
+            if ( (test.balance - price) >= 0){
+                var prebalance = test.balance
+                test.balance -= price;
+                if ( !itemExists(test.inventory.profile_pictures, itemId) && (type == "profile_pictures")) {
+                    test.inventory.profile_pictures.push({
+                        name: itemId,
+                        url: itemUrl
+                    })
+                }else if ( !itemExists(test.inventory.cardback, itemId) && (type == "cardback")) {
+                    test.inventory.cardback.push({
+                        name: itemId,
+                        url: itemUrl
+                    })
+                }else if ( !itemExists(test.inventory.music, itemId) && (type == "music")) {
+                    test.inventory.music.push({
+                        name: itemId,
+                        url: itemUrl
+                    })
+                }else{
+                    return `User already has ${itemId}`;
+                }
+                await firebase.database().ref(`users/${userId}`).set(test);
+                
+                return `Purchased! ${prebalance} - ${price} = ${test.balance}`;
+
+            } else {
+                return 'Sorry, you do not have enough balance';
+            }
+        }).catch(function(e){
+            console.log(e.message)
+            return e.message
+        })
+
+    return message;
+}
+
+
+/*
+    Change user's ${type} data(ex. music, cardback, avatar) with a object
+    containing the name and url
+ */
+async function changeProfile(user_id, name, url, type){
+    message = `No changes made to ${type}`;
+
+    message = await firebase.database().ref(`users/${user_id}/${type}`).set({
+        name: name,
+        url: url
+    }).then(function(){
+        return `Successfully changed ${type}`;
+    }).catch(function(){
+        return `Failed to change ${type}`;
+    });
+
+    return message;
+}
+
 
 
 /*****************************************************************************
@@ -218,7 +331,7 @@ var getDeck = (count) => {
             json: true
         }, (error, response, body) => {
             if (error) {
-                reject('Cannot connect to RestCountries API')
+                reject('Cannot connect to Deck Of Cards API')
             } else if (body.status === '401') {
                 reject('Unauthorized Access to webpage')
             } else if (body.shuffled === '404') {
@@ -244,7 +357,7 @@ var drawDeck = (deck_id, count) => {
             json: true
         }, (error, response, body) => {
             if (error) {
-                reject('Cannot connect to RestCountries API')
+                reject('Cannot connect to Deck Of Cards API')
             } else if (body.status === '401') {
                 reject('Unauthorized Access to webpage')
             } else if (body.shuffled === '404') {
@@ -269,7 +382,7 @@ var shuffleDeck = (deck_id) => {
             json: true
         }, (error, response, body) => {
             if (error) {
-                reject('Cannot connect to RestCountries API')
+                reject('Cannot connect to Deck Of Cards API')
             } else if (body.status === '401') {
                 reject('Unauthorized Access to webpage')
             } else if (body.shuffled === '404') {
@@ -283,6 +396,20 @@ var shuffleDeck = (deck_id) => {
     })
 };
 
+function isInArray(value, array) {
+    return array.indexOf(value) > -1;
+}
+
+function itemExists(arr, name, type) {
+
+    const found = arr.some(el => el.name === name);
+    console.log('arr ', arr)
+    console.log('name', name)
+    console.log('found ', found)
+    return found;
+}
+
+
 module.exports = {
     shuffleDeck,
     drawDeck,
@@ -292,5 +419,8 @@ module.exports = {
     saveHighScore,
     getHighScores,
     retrieveAllUsers,
-    retrieveUserData
+    retrieveUserData,
+    buyItem,
+    deleteAccount,
+    changeProfile
 };
