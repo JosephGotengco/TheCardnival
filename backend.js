@@ -78,7 +78,9 @@ var deleteAccount = async () => {
     var uid = user.uid
     message = user.delete().then(async function() {
         await firebase.database().ref(`users/${uid}`).remove();
-        
+        await firebase.database().ref(`big_or_small/${uid}`).remove();
+        await firebase.database().ref(`joker/${uid}`).remove();
+
         return 'delete success'
     }).catch(function(error){
         return error.message
@@ -101,7 +103,8 @@ async function saveHighScore(userId, email, score, won, game_name) {
 
     await firebase.database().ref(`users/${userId}`).once('value')
         .then(async function(snapshot) {
-            test = await snapshot.val()
+            test = await snapshot.val();
+            console.log(test);
             test[game_name].games_played += 1;
             test.balance += score;
             if (won) {

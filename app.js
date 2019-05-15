@@ -7,18 +7,7 @@ const path = require('path');
 const port = process.env.PORT || 8080;
 
 var app = express();
-var deck = 0;
-var card = 0;
-var card2 = 0;
-var cardback = "/img/cardbacks/red_cardback.png";
-var music = "";
-var score = 0;
-var current_user = undefined;
-var nav_email = "Guest";
-var balance = undefined;
 
-var joker = "/img/joker.jpg";
-var jokerCardCount = 52;
 
 var config = {
     apiKey: "AIzaSyDOvbL8GIvalFiVeUKmdEL5N7Dv6qzPk-w",
@@ -43,6 +32,18 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
 }));
+
+var deck = 0;
+var card = 0;
+var card2 = 0;
+var cardback = "/img/cardbacks/red_cardback.png";
+var music = "";
+var score = 0;
+var current_user = undefined;
+var nav_email = "Guest";
+var balance = undefined;
+var joker = "/img/joker.jpg";
+var jokerCardCount = 52;
 
 /*****************************************************************************
 
@@ -846,7 +847,7 @@ app.get('/joker', async (request, response) => {
     }
     catch (e){
         response.render('error.hbs',{
-            error: error
+            error: e
         })
         console.log(e);
     }
@@ -881,7 +882,7 @@ app.post('/newjoker', async (request, response) => {
             card_button.push(card_button_obj)
         }
         message = "";
-        renderJoker(request, response, "", turnsleft=10, message, card_button)
+        renderJoker(request, response, "", turnsleft, message, card_button)
         return jhand
     } catch (e) {
         response.render('error.hbs',{
@@ -918,12 +919,14 @@ app.post('/flip/:id', async (request, response) => {
     if (cards[card_id].value == "JOKER") {
         jscore = turnsleft;
         message = `Congratulations, you have won ${jscore} tokens!`
+        await backend.saveHighScore(current_user.uid, current_user.email, turnsleft, true, 'joker');
         renderJoker(request, response, "disabled", turnsleft, message, card_button)
     }
     else{
         turnsleft -= 1;
         if (turnsleft == 0){
             message = `Out of turns! You Lose!`
+            await backend.saveHighScore(current_user.uid, current_user.email, turnsleft, false, 'joker');
             renderJoker(request, response, "disabled", turnsleft, message, card_button)
         }
         else{
@@ -944,13 +947,17 @@ app.post('/flip/:id', async (request, response) => {
 
 function renderJoker(request, response, state, turnsleft, message, card_button_array) {
     response.render('joker.hbs', {
-        title: 'Joker Get',
+        title: 'Joker Get | Play Game',
         state: state,
         jdeck: jdeck,
         turnsleft: turnsleft,
         jscore: jscore,
         message: message,
-        card_button_array: card_button_array
+        card_button_array: card_button_array,
+        nav_email: nav_email,
+        balance: balance,
+        music: music,
+        cardback: cardback
     });
 }
 
