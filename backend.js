@@ -155,6 +155,9 @@ async function getHighScores(game_name) {
     return sortable
 }
 
+async function subtractBalance(balance){
+
+}
 
 
 /*****************************************************************************
