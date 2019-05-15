@@ -42,8 +42,6 @@ var score = 0;
 var current_user = undefined;
 var nav_email = "Guest";
 var balance = undefined;
-var joker = "/img/joker.jpg";
-var jokerCardCount = 52;
 
 /*****************************************************************************
 
@@ -792,62 +790,38 @@ START - JOKER GAME
 
 ******************************************************************************/
 
-var turnsleft = 51;
 var jdeck = 0;
 var jhand = 0;
 var jscore = 0;
 var cards = [];
+var card_objs = [];
+var numOfJokers = 10;
+var matchOne = undefined;
+var matchTwo = undefined;
+var joker = "/img/joker.jpg";
+var matchCardCount = 52;
+var matchedCount = 0;
+var turnsleft = matchCardCount * 3;
 
-function shuffle(arra1) {
-    var ctr = arra1.length, temp, index;
-
-    // While there are elements in the array
-    while (ctr > 0) {
-        // Pick a random index
-        index = Math.floor(Math.random() * ctr);
-        // Decrease ctr by 1
-        ctr--;
-        // And swap the last element with it
-        temp = arra1[ctr];
-        arra1[ctr] = arra1[index];
-        arra1[index] = temp;
-    }
-    return arra1;
-}
-
-app.get('/joker', async (request, response) => {
+app.get('/match', async (request, response) => {
     try {
 
-        var card_param = [];
-        for(i = 0; i < jokerCardCount; i++){
-            card_param.push(cardback);
+        card_objs = [];
+        for(i = 0; i < matchCardCount; i++){
+            card_objs.push(cardback);
         }
-
-        jdeck = await backend.getDeck(1);
-        jhand = await backend.drawDeck(jdeck.deck_id, jokerCardCount);
-
-        var jokercard = {"image": joker, "value": "JOKER"}
-
-        for(var i = 0; i<jhand.cards.length; i++){
-            cards.push(jhand.cards[i])
-        }
-       
-        cards.push(jokercard)
-        shuffle(cards)
-        // console.log(shuffle(cards));
 
         var card_button = [];
-        for (var i=0; i < card_param.length; i++){
+        for (var i=0; i < card_objs.length; i++){
             var card_button_obj = {
-                button: `<button class="btn btn-sm btn-light ${i+1}" style="width: 90%; font-size: 14px" name="flip${i+1}">Flip</button>\n`,
                 button_id: i,
-                card: card_param[i]
+                card: card_objs[i]
             }
             card_button.push(card_button_obj)
         }
+
         message = "";
         renderJoker(request, response, "", turnsleft, message, card_button)
-        return jhand
     }
     catch (e){
         response.render('error.hbs',{
@@ -857,98 +831,114 @@ app.get('/joker', async (request, response) => {
     }
 });
 
-app.post('/newjoker', async (request, response) => {
+app.post('/newMatch', async (request, response) => {
     try {
-        var card_param = [];
-        for(i = 0; i < jokerCardCount; i++){
-            card_param.push(cardback);
-        }
+        resetVariables();
 
-        jdeck = await backend.shuffleDeck(jdeck.deck_id);
-        jhand = await backend.drawDeck(jdeck.deck_id, jokerCardCount);
-        
-        var jokercard = {"image": joker, "value": "JOKER"}
+        for(i = 0; i < matchCardCount; i++){
+            card_objs.push({
+                button: `<button class="btn btn-sm btn-light ${i + 1}" style="width: 90%; font-size: 14px" name="flip${i + 1}">Flip</button>\n`,
+                button_id : i,
+                card: cardback
+            });
+        }
+        jdeck = await backend.getDeck(1);
+        jhand = await backend.drawDeck(jdeck.deck_id, matchCardCount);
 
         for(var i = 0; i<jhand.cards.length; i++){
             cards.push(jhand.cards[i])
         }
-       
-        cards.push(jokercard)
-        shuffle(cards)
 
-        var card_button = [];
-        for (var i=0; i < card_param.length; i++){
-            var card_button_obj = {
-                button: `<button class="btn btn-sm btn-light ${i+1}" style="width: 90%; font-size: 14px" name="flip${i+1}">Flip</button>\n`,
-                button_id: i,
-                card: card_param[i]
-            }
-            card_button.push(card_button_obj)
-        }
+        cards = shuffle(cards);
         message = "";
-        renderJoker(request, response, "", turnsleft, message, card_button)
-        return jhand
+
+        renderJoker(request, response, "", turnsleft, message, card_objs)
+
     } catch (e) {
         response.render('error.hbs',{
-            error: error
+            error: e
         })
         console.log(e)
     }
 });
 
-// Is it possible for async to take parameters?
-// -> See backend.js.loginaccount for ref (uses result, not request)
+
 app.post('/flip/:id', async (request, response) => {
-    var card_param = [];
-    for(i = 0; i < jokerCardCount; i++){
-        card_param.push(cardback);
-    }
 
     var card_id = request.params.id;
-    for (var i=0; i < card_param.length; i++){
-        if (card_id == i) {
-            card_param[i] = cards[i].image
-        }   
-    }
-
-    var card_button = [];
-    for (var i=0; i < card_param.length; i++){
-        var card_button_obj = {
-            card: card_param[i]
-        }
-        card_button.push(card_button_obj)
-    }
-
     message = ""
-    if (cards[card_id].value == "JOKER") {
-        jscore = turnsleft;
-        message = await backend.saveHighScore(current_user.uid, current_user.email, turnsleft, true, 'joker');
-        renderJoker(request, response, "disabled", turnsleft, message, card_button)
+    turnsleft--;
+    if(matchOne == undefined){
+        matchOne = card_id;
+    }else if(matchTwo == undefined){
+        matchTwo = card_id;
+        if(getNumeric(cards[matchOne].value) == getNumeric(cards[matchTwo].value)){
+            card_objs[matchOne].button = `<button class="btn btn-sm btn-light ${matchOne + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchOne + 1}">Flip</button>\n`
+            card_objs[matchTwo].button = `<button class="btn btn-sm btn-light ${matchTwo + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchTwo + 1}">Flip</button>\n`
+
+            matchedCount += 2;
+        }
+    }else{
+
+        //Flip non-match cards back down
+        if(getNumeric(cards[matchOne].value) != getNumeric(cards[matchTwo].value)){
+            card_objs[matchOne].button = `<button class="btn btn-sm btn-light ${matchOne + 1}" style="width: 90%; font-size: 14px" name="flip${matchOne + 1}">Flip</button>\n`
+            card_objs[matchOne].card = cardback
+            card_objs[matchTwo].button = `<button class="btn btn-sm btn-light ${matchTwo + 1}" style="width: 90%; font-size: 14px" name="flip${matchTwo + 1}">Flip</button>\n`
+            card_objs[matchTwo].card = cardback
+        }else{
+            card_objs[matchOne].button = `<button class="btn btn-sm btn-light ${matchOne + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchOne + 1}">Flip</button>\n`
+            card_objs[matchTwo].button = `<button class="btn btn-sm btn-light ${matchTwo + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchTwo + 1}">Flip</button>\n`
+            matchedCount += 2;
+        }
+
+        //Reset match values
+        matchOne = card_id;
+        matchTwo = undefined;
     }
-    else{
-        turnsleft -= 1;
-        if (turnsleft == 0){
-            message = await backend.saveHighScore(current_user.uid, current_user.email, turnsleft, false, 'joker');
-            renderJoker(request, response, "disabled", turnsleft, message, card_button)
+
+    card_objs[card_id].button = `<button class="btn btn-sm btn-light ${card_id + 1}" style="width: 90%; font-size: 14px;border: red solid 2px;" disabled="true" name="flip${card_id + 1}">Flip</button>\n`
+    card_objs[card_id].card = cards[card_id].image
+
+    if (matchedCount == matchCardCount){
+        //message = await backend.saveHighScore(current_user.uid, current_user.email, turnsleft, false, 'joker');
+        renderJoker(request, response, "disabled", turnsleft, 'You win', card_objs)
+
+    }else if (turnsleft == 0) {
+        for(var i = 0; i < card_objs.length; i++){
+            card_objs[i].button = `<button class="btn btn-sm btn-light ${i + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${i + 1}">Flip</button>\n`
+            card_objs[i].card = cards[i].image
         }
-        else{
-            // array of objects where first key is the button and second key is the cardback or card image
-            var card_button = [];
-            for (var i=0; i < card_param.length; i++){
-                var card_button_obj = {
-                    button: `<button class="btn btn-sm btn-light ${i+1}" style="width: 90%; font-size: 14px" name="flip${i+1}">Flip</button>\n`,
-                    button_id: i,
-                    card: card_param[i]
-                }
-                card_button.push(card_button_obj)
-            }
-            renderJoker(request, response, "", turnsleft, message, card_button)
-        }
+
+        //message = await backend.saveHighScore(current_user.uid, current_user.email, turnsleft, false, 'joker');
+        renderJoker(request, response, "disabled", turnsleft, 'You lose', card_objs)
+    } else {
+
+        renderJoker(request, response, "", turnsleft, message, card_objs)
     }
 });
 
+function shuffle(array) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
+
 function renderJoker(request, response, state, turnsleft, message, card_button_array) {
-    response.render('joker.hbs', {
+    response.render('match.hbs', {
         title: 'Joker Get | Play Game',
         state: state,
         jdeck: jdeck,
@@ -963,6 +953,13 @@ function renderJoker(request, response, state, turnsleft, message, card_button_a
     });
 }
 
+function resetVariables(){
+    turnsleft = matchCardCount * 3;
+    card_objs = [];
+    cards = [];
+    matchOne = undefined;
+    matchTwo = undefined;
+}
 /*****************************************************************************
 
 END- JOKER GAME
