@@ -657,7 +657,7 @@ async function cardbombNewgame(request, response){
 		return;
 	}
 	deck = await backend.getDeck(1);
-        deck = await backend.shuffleDeck(deck.deck_id);
+    deck = await backend.shuffleDeck(deck.deck_id);
 	card = await backend.drawDeck(deck.deck_id, 1);
 	cardbomb_game = true;
         renderCardbombGame(request, response, "", card.cards[0].image, cardback, 52, "");
@@ -678,9 +678,11 @@ app.post('/cardbomb_raise', async (request, response) => {
             cardbombRaise(request, response);
             return;
         } else {
-            if (getNumeric(card.cards[0].code) != '4S') {
+            if (getNumeric(card.cards[0].code) != 4) {
+                console.log('win')
                 cardbombRaise(request, response);
             } else {
+                console.log('lose')
                 cardbombBoom(request, response);
             }
         }
@@ -742,7 +744,8 @@ async function cardbombRaise(request, response) {
     } else {
         var win_message = `Congratulations, you have finished the deck with ${score} points`;
         if (current_user !== undefined) {
-            await backend.saveCardbombHighScore(current_user.uid, current_user.email, score, true);
+
+            win_message = await backend.saveHighScore(current_user.uid, current_user.email, score, true, 'cardbomb');
             balance += score;
         }
         renderCardbombGame(request, response, "", card.cards[0].image, cardback, card.remaining, win_message)
@@ -753,7 +756,8 @@ async function cardbombRaise(request, response) {
 async function cardbombBoom(request, response) {
     var lose_message = `BOOM! you lost the game`;
     if (current_user !== undefined) {
-        lose_message = await backend.saveCardbombHighScore(current_user.uid, current_user.email, score, false);
+
+        lose_message = await backend.saveHighScore(current_user.uid, current_user.email, score, false, 'cardbomb');
     }
     score = 0;
     renderCardbombGame(request, response, "disabled", card.cards[0].image, cardback, card.remaining, lose_message); 
@@ -763,8 +767,8 @@ async function cardbombBoom(request, response) {
 async function cardbombLeave(request, response) {
     message = `You have decided to leave with your winnings. Congratulations you have won ${score} points!`;
     if (current_user !== undefined) {
-        //saveCardbombHighScore() should append the high score message to the original message.
-        message = await backend.saveCardbombHighScore(current_user.uid, current_user.email, score, false);
+
+        message = await backend.saveHighScore(current_user.uid, current_user.email, score, false, 'cardbomb');
         balance += score;
     }
     score = 0;
@@ -918,15 +922,13 @@ app.post('/flip/:id', async (request, response) => {
     message = ""
     if (cards[card_id].value == "JOKER") {
         jscore = turnsleft;
-        message = `Congratulations, you have won ${jscore} tokens!`
-        await backend.saveHighScore(current_user.uid, current_user.email, turnsleft, true, 'joker');
+        message = await backend.saveHighScore(current_user.uid, current_user.email, turnsleft, true, 'joker');
         renderJoker(request, response, "disabled", turnsleft, message, card_button)
     }
     else{
         turnsleft -= 1;
         if (turnsleft == 0){
-            message = `Out of turns! You Lose!`
-            await backend.saveHighScore(current_user.uid, current_user.email, turnsleft, false, 'joker');
+            message = await backend.saveHighScore(current_user.uid, current_user.email, turnsleft, false, 'joker');
             renderJoker(request, response, "disabled", turnsleft, message, card_button)
         }
         else{
