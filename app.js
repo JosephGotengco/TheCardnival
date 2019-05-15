@@ -7,18 +7,7 @@ const path = require('path');
 const port = process.env.PORT || 8080;
 
 var app = express();
-var deck = 0;
-var card = 0;
-var card2 = 0;
-var cardback = "/img/cardbacks/red_cardback.png";
-var music = "";
-var score = 0;
-var current_user = undefined;
-var nav_email = "Guest";
-var balance = undefined;
 
-var joker = "/img/joker.jpg";
-var jokerCardCount = 52;
 
 var config = {
     apiKey: "AIzaSyDOvbL8GIvalFiVeUKmdEL5N7Dv6qzPk-w",
@@ -44,9 +33,21 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
+var deck = 0;
+var card = 0;
+var card2 = 0;
+var cardback = "/img/cardbacks/red_cardback.png";
+var music = "";
+var score = 0;
+var current_user = undefined;
+var nav_email = "Guest";
+var balance = undefined;
+var joker = "/img/joker.jpg";
+var jokerCardCount = 52;
+
 /*****************************************************************************
 
- HBS REGISTER
+ START - HBS REGISTER
 
  ******************************************************************************/
 
@@ -62,14 +63,19 @@ hbs.registerHelper('getCurrentYear', () => {
     return new Date().getFullYear();
 });
 
-// hbs.registerHelper('message', (text) => {
-//     return text.toUpperCase();
-// });
+/*****************************************************************************
+
+ END - HBS REGISTER
+
+ ******************************************************************************/
+
+
+
 
 
 /*****************************************************************************
 
-    REST ENDPOINTS
+START - NAVIGATIONS
 
 ******************************************************************************/
 /*
@@ -144,61 +150,6 @@ app.get('/login', (request, response) => {
         balance: balance
     })
 });
-
-/*
-    Make RESTFUL POST request and start game as player with
-    login information. Disables game feature until it is started.
- */
-app.post('/game', async (request, response) => {
-    try {
-        var email = request.body.email;
-        var password = request.body.password;
-        var login = await backend.loginAccount(email, password, request, response);
-        if (login.failed == "") {
-
-            current_user = login.current_user;
-            nav_email = current_user.email;
-            balance = current_user.balance;
-            cardback = current_user.cardback.url;
-            music = current_user.music.url;
-            deck = login.deck;
-            console.log(`current user: ${current_user.email}`);
-            await renderProfile(current_user.uid, request, response);
-        } else {
-            response.render('login.hbs', {
-                title: 'Big or Small | Login',
-                failed: login.failed,
-                nav_email: nav_email,
-            })
-        }
-    } catch (e) {
-        response.render('error.hbs',{
-            error: error
-        })
-        console.log(e)
-    }
-});
-
-/*
-    Make RESTFUL POST request, render a new game with a reshuffled deck
-    and new scores
- */
-app.post('/newgame', async (request, response) => {
-    score = 0;
-
-    try {
-        deck = await backend.shuffleDeck(deck.deck_id);
-        card = await backend.drawDeck(deck.deck_id, 1);
-        card2 = await backend.drawDeck(deck.deck_id, 1);
-        renderGame(request, response, "", card.cards[0].image, cardback, card.remaining, "")
-    } catch (e) {
-        response.render('error.hbs',{
-            error: error
-        })
-        console.log(e)
-    }
-});
-
 /*
     Make RESTFUL GET request, render the screen and display all
     existing players with their personal high scores
@@ -228,82 +179,6 @@ app.get('/rankings', async (request, response) => {
     }
 });
 
-/*
-    Make RESTFUL POST request and determine results if player picked
-    next card as BIGGER than the current card. Display results based
-    on outcome. Will also save better high scores.
- */
-app.post('/bigger', async (request, response) => {
-    try {
-        if (getNumeric(card.cards[0].value) < getNumeric(card2.cards[0].value)) {
-            correctGuess(1, request, response);
-        } else {
-            wrongGuess(request, response);
-        }
-    } catch (e) {
-        response.render('error.hbs',{
-            error: error
-        })
-        console.log(e)
-    }
-});
-
-/*
-    Make RESTFUL POST request and determine results if player picked
-    next card as TIE. Display results based on outcome. Will also
-    save better high scores.
- */
-app.post('/tie', async (request, response) => {
-    try {
-        if (getNumeric(card.cards[0].value) === getNumeric(card2.cards[0].value)) {
-            correctGuess(4, request, response);
-
-        } else {
-            wrongGuess(request, response);
-        }
-    } catch (e) {
-        response.render('error.hbs',{
-            error: error
-        })
-        console.log(e)
-    }
-});
-
-
-/*
-    Make RESTFUL POST request and determine results if player picked
-    next card as SMALLER than the current card. Display results based
-    on outcome. Will also save better high scores.
- */
-app.post('/smaller', async (request, response) => {
-    try {
-        if (getNumeric(card.cards[0].value) > getNumeric(card2.cards[0].value)) {
-            correctGuess(1, request, response);
-        } else {
-            wrongGuess(request, response);
-        }
-    } catch (e) {
-        response.render('error.hbs',{
-            error: error
-        })
-        console.log(e)
-    }
-});
-
-/*
-    Make RESTFUL GET request and render game
- */
-app.get(`/deck`, async (request, response) => {
-    try {
-        deck = await backend.getDeck(1);
-        renderGame(request, response, "disabled", cardback, cardback, deck.remaining, "");
-    } catch (e) {
-        response.render('error.hbs',{
-            error: error
-        })
-        console.log(e)
-    }
-});
 
 /*
     Make RESTFUL GET request and render game
@@ -316,6 +191,22 @@ app.get(`/gameportal`, async (request, response) => {
     })
 });
 
+/*****************************************************************************
+
+END - NAVIGATIONS
+
+******************************************************************************/
+
+
+
+
+
+/*****************************************************************************
+
+START - STORE
+
+******************************************************************************/
+
 /*
     Make RESTFUL GET request and render game
  */
@@ -326,6 +217,10 @@ app.get(`/store`, async (request, response) => {
         balance: balance
     })
 });
+
+
+
+
 
 /*
     Make RESTFUL GET request and render game
@@ -358,6 +253,22 @@ app.post(`/buy`, async (request, response) => {
         balance: balance
     })
 });
+
+/*****************************************************************************
+
+END - STORE
+
+******************************************************************************/
+
+
+
+
+
+/*****************************************************************************
+
+START - PROFILE(S) 
+
+******************************************************************************/
 
 app.get('/profile/:email', async (request, response) => {
     var test = {};
@@ -421,10 +332,313 @@ app.post(`/cardback`, async (request, response) => {
     }
 });
 
+async function renderProfile(user_id, request, response) {
+    var user_info = {};
+    try{
+        if (user_id != undefined) {
+            user_info = await backend.retrieveUserData(user_id);
+            user_info.profile_picture = `src="${user_info.profile_picture.url}"`
+            if (current_user != undefined){
+                if(current_user.uid == user_id){
+                    //SELF VIEW
+                    nav_email = user_info.email;
+                    user_info.nav_email = user_info.email;
+                    balance = user_info.balance;
+                    user_info.avatars = await arrObjToHTMLString(user_info.inventory.profile_pictures,'','profile_pictures');
+                    user_info.musics = await arrObjToHTMLString(user_info.inventory.music,'','music');
+                    user_info.cardbacks = await arrObjToHTMLString(user_info.inventory.cardback,'cardback');
+                }else{
+                    //OTHER USERS VIEW
+                    user_info.nav_email = nav_email;
+                    user_info.balance = balance;
+                    user_info.avatars = await arrObjToHTMLString(user_info.inventory.profile_pictures,'display: none;','profile_pictures');
+                    user_info.musics = await arrObjToHTMLString(user_info.inventory.music,'display: none;', 'music');
+                    user_info.cardbacks = await arrObjToHTMLString(user_info.inventory.cardback,'display: none;', 'cardback');   
+                } 
+            }else{
+                //GUEST VIEW
+                user_info.nav_email = 'Guest';
+                user_info.balance = undefined;
+                user_info.avatars = await arrObjToHTMLString(user_info.inventory.profile_pictures,'display: none;', 'profile_pictures');
+                user_info.musics = await arrObjToHTMLString(user_info.inventory.music,'display: none;', 'music');
+                user_info.cardbacks = await arrObjToHTMLString(user_info.inventory.cardback,'display: none;', 'cardback');
+            }
+        }
+        user_info.title = `Big or Small | Profile`;
+
+        await response.render('profile.hbs', user_info)
+    }catch(error){
+        response.render('error.hbs',{
+            error: error
+        })
+    }
+}
+
+async function arrObjToHTMLString(array, not_user, type){
+    html_string = ""
+
+    array.forEach((element, index, array) => {
+            if (index % 2 == 0) {
+                html_string += `<div class="row">\n`
+            }
+            var item = element.name + ',' + element.url
+            html_string += `    <div class="card-body col-6">\n`
+            if(type != 'music'){
+                html_string += `        <img src="${element.url}" alt="default"\n`
+                html_string += `        style="max-width: 80%; height: auto">\n`
+            }else{
+                html_string += `        <img src="https://firebasestorage.googleapis.com/v0/b/bigorsmall-9c0b5.appspot.com/o/PicklesCarnival.jpg?alt=media&token=88a4de84-3b22-4237-a1b9-c5f3a68dc0f5" alt="default"\n`
+                html_string += `        style="max-width: 100%; height: auto">\n`
+                html_string += `<p style="max-width: 100%; height: auto">${element.name}</p>`
+            }
+
+            html_string += `        <button class="btn wide-btn btn-info" name="url" value="${element.name},${element.url}" style="${not_user}">Use this!</button>\n`
+            html_string += `    </div>\n`
+
+            if (index % 2 == 1) {
+                html_string += `</div>\n`
+            }
+        })
+
+    if(array.length % 2 == 1){
+        html_string += `</div>\n`
+    }
+
+    return html_string
+}
+/*****************************************************************************
+
+END - PROFILE(S)
+
+******************************************************************************/
+
+
+
+
 
 /*****************************************************************************
 
-CARDBOMB FUNCTIONS START
+START - BIG OR SMALL GAME
+
+ ******************************************************************************/
+
+/*
+    Make RESTFUL POST request and start game as player with
+    login information. Disables game feature until it is started.
+ */
+app.post('/game', async (request, response) => {
+    try {
+        var email = request.body.email;
+        var password = request.body.password;
+        var login = await backend.loginAccount(email, password, request, response);
+        if (login.failed == "") {
+
+            current_user = login.current_user;
+            nav_email = current_user.email;
+            balance = current_user.balance;
+            cardback = current_user.cardback.url;
+            music = current_user.music.url;
+            deck = login.deck;
+            console.log(`current user: ${current_user.email}`);
+            await renderProfile(current_user.uid, request, response);
+        } else {
+            response.render('login.hbs', {
+                title: 'Big or Small | Login',
+                failed: login.failed,
+                nav_email: nav_email,
+            })
+        }
+    } catch (e) {
+        response.render('error.hbs',{
+            error: error
+        })
+        console.log(e)
+    }
+});
+
+/*
+    Make RESTFUL POST request, render a new game with a reshuffled deck
+    and new scores
+ */
+app.post('/newgame', async (request, response) => {
+    score = 0;
+
+    try {
+        deck = await backend.shuffleDeck(deck.deck_id);
+        card = await backend.drawDeck(deck.deck_id, 1);
+        card2 = await backend.drawDeck(deck.deck_id, 1);
+        renderBigOrSmall(request, response, "", card.cards[0].image, cardback, card.remaining, "")
+    } catch (e) {
+        response.render('error.hbs',{
+            error: error
+        })
+        console.log(e)
+    }
+});
+
+
+/*
+    Make RESTFUL POST request and determine results if player picked
+    next card as BIGGER than the current card. Display results based
+    on outcome. Will also save better high scores.
+ */
+app.post('/bigger', async (request, response) => {
+    try {
+        if (getNumeric(card.cards[0].value) < getNumeric(card2.cards[0].value)) {
+            bigOrSmallCorrect(1, request, response);
+        } else {
+            bigOrSmallWrong(request, response);
+        }
+    } catch (e) {
+        response.render('error.hbs',{
+            error: error
+        })
+        console.log(e)
+    }
+});
+
+/*
+    Make RESTFUL POST request and determine results if player picked
+    next card as TIE. Display results based on outcome. Will also
+    save better high scores.
+ */
+app.post('/tie', async (request, response) => {
+    try {
+        if (getNumeric(card.cards[0].value) === getNumeric(card2.cards[0].value)) {
+            bigOrSmallCorrect(4, request, response);
+
+        } else {
+            bigOrSmallWrong(request, response);
+        }
+    } catch (e) {
+        response.render('error.hbs',{
+            error: error
+        })
+        console.log(e)
+    }
+});
+
+
+/*
+    Make RESTFUL POST request and determine results if player picked
+    next card as SMALLER than the current card. Display results based
+    on outcome. Will also save better high scores.
+ */
+app.post('/smaller', async (request, response) => {
+    try {
+        if (getNumeric(card.cards[0].value) > getNumeric(card2.cards[0].value)) {
+            bigOrSmallCorrect(1, request, response);
+        } else {
+            bigOrSmallWrong(request, response);
+        }
+    } catch (e) {
+        response.render('error.hbs',{
+            error: error
+        })
+        console.log(e)
+    }
+});
+
+
+/*
+    Convert Card strings and return appropriate corresponding values
+ */
+function getNumeric(card) {
+    var trimmed = card.trim()
+    if (trimmed === "KING") {
+        return 13
+    } else if (trimmed === "QUEEN") {
+        return 12
+    } else if (trimmed === "JACK") {
+        return 11
+    } else if (trimmed === "ACE") {
+        return 1
+    } else {
+        return parseInt(trimmed)
+    }
+}
+
+async function bigOrSmallCorrect(weight, request, response) {
+    score += weight;
+    card = card2;
+    card2 = await backend.drawDeck(deck.deck_id, 1);
+    if (card2.remaining > 0) {
+        renderBigOrSmall(request, response, "", card.cards[0].image, cardback, card.remaining, `Correct Guess!`);
+    } else {
+        var win_message = `Congratulations, you have finished the deck with ${score} point`;
+        if (current_user !== undefined) {
+            await backend.saveHighScore(current_user.uid, current_user.email, score, true, 'big_or_small');
+            balance += score;
+        }
+        renderBigOrSmall(request, response, "", card.cards[0].image, cardback, card.remaining, win_message)
+    }
+}
+
+async function bigOrSmallWrong(request, response) {
+    var lose_message = `Sorry, you have lost with ${score} points`;
+    if (current_user !== undefined) {
+        lose_message = await backend.saveHighScore(current_user.uid, current_user.email, score, false, 'big_or_small');
+        balance += score;
+    }
+    renderBigOrSmall(request, response, "disabled", card.cards[0].image, card2.cards[0].image, card.remaining,
+        lose_message);
+    score = 0;
+}
+
+/*
+    Renders the game screen with different display options based on parameters
+ */
+function renderBigOrSmall(request, response, state, first_card, second_card, remaining, game_state) {
+    var name = "Guest";
+    if (current_user !== undefined) {
+        name = `${current_user.fname} ${current_user.lname}`;
+    }
+    response.render('game.hbs', {
+        title: 'Big or Small | Play Game',
+        card: first_card,
+        card2: second_card,
+        bigger: state,
+        smaller: state,
+        tie: state,
+        score: score,
+        remaining: remaining,
+        name: name,
+        game_state: game_state,
+        nav_email: nav_email,
+        balance: balance,
+        music: music,
+        cardback: cardback
+    });
+}
+
+/*
+    Make RESTFUL GET request and render game
+ */
+app.get(`/deck`, async (request, response) => {
+    try {
+        deck = await backend.getDeck(1);
+        renderBigOrSmall(request, response, "disabled", cardback, cardback, deck.remaining, "");
+    } catch (e) {
+        response.render('error.hbs',{
+            error: error
+        })
+        console.log(e)
+    }
+});
+
+/*****************************************************************************
+
+END - BIG OR SMALL GAME
+
+ ******************************************************************************/
+
+
+
+
+
+/*****************************************************************************
+
+START - CARDBOMB GAME
 
  ******************************************************************************/
 
@@ -443,7 +657,7 @@ async function cardbombNewgame(request, response){
 		return;
 	}
 	deck = await backend.getDeck(1);
-        deck = await backend.shuffleDeck(deck.deck_id);
+    deck = await backend.shuffleDeck(deck.deck_id);
 	card = await backend.drawDeck(deck.deck_id, 1);
 	cardbomb_game = true;
         renderCardbombGame(request, response, "", card.cards[0].image, cardback, 52, "");
@@ -464,9 +678,11 @@ app.post('/cardbomb_raise', async (request, response) => {
             cardbombRaise(request, response);
             return;
         } else {
-            if (getNumeric(card.cards[0].code) != '4S') {
+            if (getNumeric(card.cards[0].code) != 4) {
+                console.log('win')
                 cardbombRaise(request, response);
             } else {
+                console.log('lose')
                 cardbombBoom(request, response);
             }
         }
@@ -528,7 +744,8 @@ async function cardbombRaise(request, response) {
     } else {
         var win_message = `Congratulations, you have finished the deck with ${score} points`;
         if (current_user !== undefined) {
-            await backend.saveCardbombHighScore(current_user.uid, current_user.email, score, true);
+
+            win_message = await backend.saveHighScore(current_user.uid, current_user.email, score, true, 'cardbomb');
             balance += score;
         }
         renderCardbombGame(request, response, "", card.cards[0].image, cardback, card.remaining, win_message)
@@ -539,7 +756,8 @@ async function cardbombRaise(request, response) {
 async function cardbombBoom(request, response) {
     var lose_message = `BOOM! you lost the game`;
     if (current_user !== undefined) {
-        lose_message = await backend.saveCardbombHighScore(current_user.uid, current_user.email, score, false);
+
+        lose_message = await backend.saveHighScore(current_user.uid, current_user.email, score, false, 'cardbomb');
     }
     score = 0;
     renderCardbombGame(request, response, "disabled", card.cards[0].image, cardback, card.remaining, lose_message); 
@@ -549,8 +767,8 @@ async function cardbombBoom(request, response) {
 async function cardbombLeave(request, response) {
     message = `You have decided to leave with your winnings. Congratulations you have won ${score} points!`;
     if (current_user !== undefined) {
-        //saveCardbombHighScore() should append the high score message to the original message.
-        message = await backend.saveCardbombHighScore(current_user.uid, current_user.email, score, false);
+
+        message = await backend.saveHighScore(current_user.uid, current_user.email, score, false, 'cardbomb');
         balance += score;
     }
     score = 0;
@@ -560,14 +778,17 @@ async function cardbombLeave(request, response) {
 
 /*****************************************************************************
 
-CARDBOMB FUNCTIONS END
+END - CARDBOMB GAME
 
 ******************************************************************************/
 
 
+
+
+
 /*****************************************************************************
 
-CARDBOMB FUNCTIONS END
+START - JOKER GAME
 
 ******************************************************************************/
 
@@ -630,7 +851,7 @@ app.get('/joker', async (request, response) => {
     }
     catch (e){
         response.render('error.hbs',{
-            error: error
+            error: e
         })
         console.log(e);
     }
@@ -665,7 +886,7 @@ app.post('/newjoker', async (request, response) => {
             card_button.push(card_button_obj)
         }
         message = "";
-        renderJoker(request, response, "", turnsleft=10, message, card_button)
+        renderJoker(request, response, "", turnsleft, message, card_button)
         return jhand
     } catch (e) {
         response.render('error.hbs',{
@@ -701,13 +922,13 @@ app.post('/flip/:id', async (request, response) => {
     message = ""
     if (cards[card_id].value == "JOKER") {
         jscore = turnsleft;
-        message = `Congratulations, you have won ${jscore} tokens!`
+        message = await backend.saveHighScore(current_user.uid, current_user.email, turnsleft, true, 'joker');
         renderJoker(request, response, "disabled", turnsleft, message, card_button)
     }
     else{
         turnsleft -= 1;
         if (turnsleft == 0){
-            message = `Out of turns! You Lose!`
+            message = await backend.saveHighScore(current_user.uid, current_user.email, turnsleft, false, 'joker');
             renderJoker(request, response, "disabled", turnsleft, message, card_button)
         }
         else{
@@ -728,80 +949,13 @@ app.post('/flip/:id', async (request, response) => {
 
 function renderJoker(request, response, state, turnsleft, message, card_button_array) {
     response.render('joker.hbs', {
-        title: 'Joker Get',
+        title: 'Joker Get | Play Game',
         state: state,
         jdeck: jdeck,
         turnsleft: turnsleft,
         jscore: jscore,
         message: message,
-        card_button_array: card_button_array
-    });
-}
-
-/*
-    Convert Card strings and return appropriate corresponding values
- */
-function getNumeric(card) {
-    var trimmed = card.trim()
-    if (trimmed === "KING") {
-        return 13
-    } else if (trimmed === "QUEEN") {
-        return 12
-    } else if (trimmed === "JACK") {
-        return 11
-    } else if (trimmed === "ACE") {
-        return 1
-    } else {
-        return parseInt(trimmed)
-    }
-}
-
-async function correctGuess(weight, request, response) {
-    score += weight;
-    card = card2;
-    card2 = await backend.drawDeck(deck.deck_id, 1);
-    if (card2.remaining > 0) {
-        renderGame(request, response, "", card.cards[0].image, cardback, card.remaining, `Correct Guess!`);
-    } else {
-        var win_message = `Congratulations, you have finished the deck with ${score} point`;
-        if (current_user !== undefined) {
-            await backend.saveHighScore(current_user.uid, current_user.email, score, true);
-            balance += score;
-        }
-        renderGame(request, response, "", card.cards[0].image, cardback, card.remaining, win_message)
-    }
-}
-
-async function wrongGuess(request, response) {
-    var lose_message = `Sorry, you have lost with ${score} points`;
-    if (current_user !== undefined) {
-        lose_message = await backend.saveHighScore(current_user.uid, current_user.email, score, false);
-        balance += score;
-    }
-    renderGame(request, response, "disabled", card.cards[0].image, card2.cards[0].image, card.remaining,
-        lose_message);
-    score = 0;
-}
-
-/*
-    Renders the game screen with different display options based on parameters
- */
-function renderGame(request, response, state, first_card, second_card, remaining, game_state) {
-    var name = "Guest";
-    if (current_user !== undefined) {
-        name = `${current_user.fname} ${current_user.lname}`;
-    }
-    response.render('game.hbs', {
-        title: 'Big or Small | Play Game',
-        card: first_card,
-        card2: second_card,
-        bigger: state,
-        smaller: state,
-        tie: state,
-        score: score,
-        remaining: remaining,
-        name: name,
-        game_state: game_state,
+        card_button_array: card_button_array,
         nav_email: nav_email,
         balance: balance,
         music: music,
@@ -809,82 +963,11 @@ function renderGame(request, response, state, first_card, second_card, remaining
     });
 }
 
-async function renderProfile(user_id, request, response) {
-    var user_info = {};
-    try{
-        if (user_id != undefined) {
-            user_info = await backend.retrieveUserData(user_id);
-            user_info.profile_picture = `src="${user_info.profile_picture.url}"`
-            if (current_user != undefined){
-                if(current_user.uid == user_id){
-                    //SELF VIEW
-                    nav_email = user_info.email;
-                    user_info.nav_email = user_info.email;
-                    balance = user_info.balance;
-                    user_info.avatars = await arrObjToHTMLString(user_info.inventory.profile_pictures,'','profile_pictures');
-                    user_info.musics = await arrObjToHTMLString(user_info.inventory.music,'','music');
-                    user_info.cardbacks = await arrObjToHTMLString(user_info.inventory.cardback,'cardback');
-                }else{
-                    //OTHER USERS VIEW
-                    user_info.nav_email = nav_email;
-                    user_info.balance = balance;
-                    user_info.avatars = await arrObjToHTMLString(user_info.inventory.profile_pictures,'display: none;','profile_pictures');
-                    user_info.musics = await arrObjToHTMLString(user_info.inventory.music,'display: none;', 'music');
-                    user_info.cardbacks = await arrObjToHTMLString(user_info.inventory.cardback,'display: none;', 'cardback');   
-                } 
-            }else{
-                //GUEST VIEW
-                user_info.nav_email = 'Guest';
-                user_info.balance = undefined;
-                user_info.avatars = await arrObjToHTMLString(user_info.inventory.profile_pictures,'display: none;', 'profile_pictures');
-                user_info.musics = await arrObjToHTMLString(user_info.inventory.music,'display: none;', 'music');
-                user_info.cardbacks = await arrObjToHTMLString(user_info.inventory.cardback,'display: none;', 'cardback');
-            }
-        }
-        user_info.title = `Big or Small | Profile`;
+/*****************************************************************************
 
-        await response.render('profile.hbs', user_info)
-    }catch(error){
-        response.render('error.hbs',{
-            error: error
-        })
-    }
-}
+END- JOKER GAME
 
-//type="button"
-//onclick="testFunction('${item}')"
+******************************************************************************/
 
-async function arrObjToHTMLString(array, not_user, type){
-    html_string = ""
-
-    array.forEach((element, index, array) => {
-            if (index % 2 == 0) {
-                html_string += `<div class="row">\n`
-            }
-            var item = element.name + ',' + element.url
-            html_string += `    <div class="card-body col-6">\n`
-            if(type != 'music'){
-                html_string += `        <img src="${element.url}" alt="default"\n`
-                html_string += `        style="max-width: 80%; height: auto">\n`
-            }else{
-                html_string += `        <img src="https://firebasestorage.googleapis.com/v0/b/bigorsmall-9c0b5.appspot.com/o/PicklesCarnival.jpg?alt=media&token=88a4de84-3b22-4237-a1b9-c5f3a68dc0f5" alt="default"\n`
-                html_string += `        style="max-width: 100%; height: auto">\n`
-                html_string += `<p style="max-width: 100%; height: auto">${element.name}</p>`
-            }
-
-            html_string += `        <button class="btn wide-btn btn-info" name="url" value="${element.name},${element.url}" style="${not_user}">Use this!</button>\n`
-            html_string += `    </div>\n`
-
-            if (index % 2 == 1) {
-                html_string += `</div>\n`
-            }
-        })
-
-    if(array.length % 2 == 1){
-        html_string += `</div>\n`
-    }
-
-    return html_string
-}
 
 module.exports = app;

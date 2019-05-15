@@ -78,7 +78,9 @@ var deleteAccount = async () => {
     var uid = user.uid
     message = user.delete().then(async function() {
         await firebase.database().ref(`users/${uid}`).remove();
-        
+        await firebase.database().ref(`big_or_small/${uid}`).remove();
+        await firebase.database().ref(`joker/${uid}`).remove();
+
         return 'delete success'
     }).catch(function(error){
         return error.message
@@ -91,7 +93,7 @@ var deleteAccount = async () => {
     Saves username and their personal scores in JSON file and return
     a high score results message depending on situation.
  */
-async function saveHighScore(userId, email, score, won) {
+async function saveHighScore(userId, email, score, won, game_name) {
     var score_message = `Sorry, you have lost with ${score}`;
     var test = {}
 
@@ -101,19 +103,21 @@ async function saveHighScore(userId, email, score, won) {
 
     await firebase.database().ref(`users/${userId}`).once('value')
         .then(async function(snapshot) {
-            test = await snapshot.val()
-            test.big_or_small.games_played += 1;
+            test = await snapshot.val();
+            console.log(test);
+            test[game_name].games_played += 1;
             test.balance += score;
             if (won) {
-                test.big_or_small.games_played += 1;
+                test[game_name].games_played += 1;
             }
 
-            if (score >=  test.big_or_small.high_score) {
-                await firebase.database().ref(`big_or_small/${userId}/`).set({
+            if (score >=  test[game_name].high_score) {
+                await firebase.database().ref(`${game_name}/${userId}/`).set({
                     score: score,
                     email: email
                 });
-                test.big_or_small.high_score = score
+                test[game_name].high_score = score
+                //test.big_or_small.high_score = score
                 score_message = `New Personal High Score ${score}`
             }
 

@@ -131,7 +131,7 @@
                                     <div class="card">
                                         <div class="card-body">
                                             <h1>Joker Get Rankings</h1>
-                                            <p>{{{rankings}}}</p>
+                                            <canvas id="myDoughnutChart2" max-width="260" height="260"></canvas>
                                         </div>
                                     </div>
                                 </div>
@@ -139,7 +139,7 @@
                                     <div class="card">
                                         <div class="card-body">
                                             <h1>CardBomb! Rankings</h1>
-                                            <p>{{{rankings}}}</p>
+                                            <canvas id="myDoughnutChart3" max-width="260" height="260"></canvas>
                                         </div>
                                     </div>
                                 </div>
@@ -178,25 +178,60 @@
             },
         });
 
+        var ctx2 = document.getElementById("myDoughnutChart2");
+        ctx2.font = "32px Verdana";
+        ctx2.fillStyle = '#000';
+        var myDoughnutChart2 = new Chart(ctx2, {
+            "type": "doughnut",
+            "data": {
+                "labels": ["Games Played", "Games Won"],
+                "datasets": [{
+                    "label": {{ joker.high_score }},
+            "data": [{{ joker.games_played }}, {{ joker.games_won }}],
+        "backgroundColor": [
+            "rgb(255, 99, 132)",
+            "rgb(54, 162, 235)"]
+                }],
+            },
+        });
+
+        var ctx3 = document.getElementById("myDoughnutChart3");
+        ctx3.font = "32px Verdana";
+        ctx3.fillStyle = '#000';
+        var myDoughnutChart3 = new Chart(ctx3, {
+            "type": "doughnut",
+            "data": {
+                "labels": ["Games Played", "Games Won"],
+                "datasets": [{
+                    "label": {{ cardbomb.high_score }},
+            "data": [{{ cardbomb.games_played }}, {{ cardbomb.games_won }}],
+        "backgroundColor": [
+            "rgb(255, 99, 132)",
+            "rgb(54, 162, 235)"]
+                }],
+            },
+        });
+
         Chart.pluginService.register({
             beforeDraw: function (chart) {
-                var width = chart.chart.width,
-                    height = chart.chart.height,
-                    ctx = chart.chart.ctx;
-
+                var width = chart.chart.width, height = chart.chart.height, ctx = chart.chart.ctx;
                 ctx.restore();
                 var fontSize = (height / 250).toFixed(2);
                 ctx.font = fontSize + "em sans-serif";
                 ctx.textBaseline = "middle";
 
-                var text = 'Highest:' + {{ big_or_small.high_score
-        }} + ' pts',
-            textX = Math.round((width - ctx.measureText(text).width) / 2),
-            textY = height / 1.875;
+                var text = 'Highest:' + {{ big_or_small.high_score }} + ' pts';
+                if (chart.id == 1) {
+                    text = 'Highest:' + {{ joker.high_score }} + ' pts';
+                }else if(chart.id == 2){
+                    text = 'Highest:' + {{ cardbomb.high_score }} + ' pts';
+                }
+                textX = Math.round((width - ctx.measureText(text).width) / 2)
+                textY = height / 1.875;
 
-        ctx.fillText(text, textX, textY);
-        ctx.save();
-          }
+                ctx.fillText(text, textX, textY);
+                ctx.save();
+            }
         });
     </script>
 </body>
