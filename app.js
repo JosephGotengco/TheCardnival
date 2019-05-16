@@ -154,24 +154,30 @@ app.get('/login', (request, response) => {
  */
 app.get('/rankings', async (request, response) => {
     try {
-        var high_scores = await backend.getHighScores('big_or_small');
-        var output_rankings = "";
-        high_scores.forEach(function (item, index, array) {
-            output_rankings += `${index + 1}. ${item[0]} | ${item[1]} Points 
-                                <a href="/profile/${item[2]}">Profile</a> <br>`
-        });
-        if (output_rankings.length === 0) {
-            output_rankings = "No Rankings currently \n"
-        }
+        var big_or_small_scores = await backend.getHighScores('big_or_small');
+        big_or_small_str = await backend.highScoreString(big_or_small_scores);
+
+        var joker_scores = await backend.getHighScores('joker');
+        joker_str = await backend.highScoreString(joker_scores);
+
+        var cardbomb_scores = await backend.getHighScores('cardbomb');
+        cardbomb_str = await backend.highScoreString(cardbomb_scores);
+
+        var match_scores = await backend.getHighScores('match');
+        match_str = await backend.highScoreString(match_scores);
+
         response.render('rankings.hbs', {
-            title: 'Big or Small | Rankings',
-            rankings: output_rankings,
+            title: 'Rankings',
+            bos_rankings: big_or_small_str,
+            joker_rankings: joker_str,
+            cardbomb_rankings: cardbomb_str,
+            match_rankings: match_str,
             nav_email: nav_email,
             balance: balance
         })
     } catch (e) {
         response.render('error.hbs',{
-            error: error
+            error: e
         })
         console.log(e.message)
     }
@@ -783,42 +789,33 @@ END - CARDBOMB GAME
 
 /*****************************************************************************
 
-START - JOKER GAME
+START - MATCH GAME
 
 ******************************************************************************/
 
-var jdeck = 0;
-var jhand = 0;
-var jscore = 0;
-var cards = [];
-var card_objs = [];
-var numOfJokers = 10;
+var matchDeck = 0;
+var matchHand = 0;
+var match_cards = [];
+var match_card_objs = [];
 var matchOne = undefined;
 var matchTwo = undefined;
-var joker = "/img/joker.jpg";
 var matchCardCount = 52;
 var matchedCount = 0;
-var turnsleft = matchCardCount * 3;
+var matchTurnScore = matchCardCount * 3;
+
 
 app.get('/match', async (request, response) => {
     try {
 
-        card_objs = [];
+        match_card_objs = [];
         for(i = 0; i < matchCardCount; i++){
-            card_objs.push(cardback);
-        }
-
-        var card_button = [];
-        for (var i=0; i < card_objs.length; i++){
-            var card_button_obj = {
-                button_id: i,
-                card: card_objs[i]
-            }
-            card_button.push(card_button_obj)
+            match_card_objs.push({
+                card: cardback
+            });
         }
 
         message = "";
-        renderJoker(request, response, "", turnsleft, message, card_button)
+        renderMatch(request, response, "", matchTurnScore, message, match_card_objs)
     }
     catch (e){
         response.render('error.hbs',{
@@ -831,25 +828,25 @@ app.get('/match', async (request, response) => {
 app.post('/newMatch', async (request, response) => {
     try {
         resetVariables();
-
+        matchDeck = await backend.getDeck(1);
+        matchHand = await backend.drawDeck(matchDeck.deck_id, matchCardCount);
         for(i = 0; i < matchCardCount; i++){
-            card_objs.push({
+            match_card_objs.push({
                 button: `<button class="btn btn-sm btn-light ${i + 1}" style="width: 90%; font-size: 14px" name="flip${i + 1}">Flip</button>\n`,
                 button_id : i,
                 card: cardback
             });
         }
-        jdeck = await backend.getDeck(1);
-        jhand = await backend.drawDeck(jdeck.deck_id, matchCardCount);
 
-        for(var i = 0; i<jhand.cards.length; i++){
-            cards.push(jhand.cards[i])
+
+        for(var i = 0; i<matchHand.cards.length; i++){
+            match_cards.push(matchHand.cards[i])
         }
 
-        cards = shuffle(cards);
+        match_cards = shuffle(match_cards);
         message = "";
 
-        renderJoker(request, response, "", turnsleft, message, card_objs)
+        renderMatch(request, response, "", matchTurnScore, message, match_card_objs)
 
     } catch (e) {
         response.render('error.hbs',{
@@ -861,57 +858,60 @@ app.post('/newMatch', async (request, response) => {
 
 
 app.post('/flip/:id', async (request, response) => {
+    try{
+        var card_id = request.params.id;
+        matchTurnScore--;
+        if(matchOne == undefined){
+            matchOne = card_id;
+        }else if(matchTwo == undefined){
+            matchTwo = card_id;
+            if(getNumeric(match_cards[matchOne].value) == getNumeric(match_cards[matchTwo].value)){
+                match_card_objs[matchOne].button = `<button class="btn btn-sm btn-light ${matchOne + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchOne + 1}">Flip</button>\n`
+                match_card_objs[matchTwo].button = `<button class="btn btn-sm btn-light ${matchTwo + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchTwo + 1}">Flip</button>\n`
 
-    var card_id = request.params.id;
-    message = ""
-    turnsleft--;
-    if(matchOne == undefined){
-        matchOne = card_id;
-    }else if(matchTwo == undefined){
-        matchTwo = card_id;
-        if(getNumeric(cards[matchOne].value) == getNumeric(cards[matchTwo].value)){
-            card_objs[matchOne].button = `<button class="btn btn-sm btn-light ${matchOne + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchOne + 1}">Flip</button>\n`
-            card_objs[matchTwo].button = `<button class="btn btn-sm btn-light ${matchTwo + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchTwo + 1}">Flip</button>\n`
-
-            matchedCount += 2;
-        }
-    }else{
-
-        //Flip non-match cards back down
-        if(getNumeric(cards[matchOne].value) != getNumeric(cards[matchTwo].value)){
-            card_objs[matchOne].button = `<button class="btn btn-sm btn-light ${matchOne + 1}" style="width: 90%; font-size: 14px" name="flip${matchOne + 1}">Flip</button>\n`
-            card_objs[matchOne].card = cardback
-            card_objs[matchTwo].button = `<button class="btn btn-sm btn-light ${matchTwo + 1}" style="width: 90%; font-size: 14px" name="flip${matchTwo + 1}">Flip</button>\n`
-            card_objs[matchTwo].card = cardback
+                matchedCount += 2;
+            }
         }else{
-            card_objs[matchOne].button = `<button class="btn btn-sm btn-light ${matchOne + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchOne + 1}">Flip</button>\n`
-            card_objs[matchTwo].button = `<button class="btn btn-sm btn-light ${matchTwo + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchTwo + 1}">Flip</button>\n`
-            matchedCount += 2;
+
+            //Flip non-match cards back down
+            if(getNumeric(match_cards[matchOne].value) != getNumeric(match_cards[matchTwo].value)){
+                match_card_objs[matchOne].button = `<button class="btn btn-sm btn-light ${matchOne + 1}" style="width: 90%; font-size: 14px" name="flip${matchOne + 1}">Flip</button>\n`
+                match_card_objs[matchOne].card = cardback
+                match_card_objs[matchTwo].button = `<button class="btn btn-sm btn-light ${matchTwo + 1}" style="width: 90%; font-size: 14px" name="flip${matchTwo + 1}">Flip</button>\n`
+                match_card_objs[matchTwo].card = cardback
+            }else{
+                match_card_objs[matchOne].button = `<button class="btn btn-sm btn-light ${matchOne + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchOne + 1}">Flip</button>\n`
+                match_card_objs[matchTwo].button = `<button class="btn btn-sm btn-light ${matchTwo + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchTwo + 1}">Flip</button>\n`
+                matchedCount += 2;
+            }
+
+            //Reset match values
+            matchOne = card_id;
+            matchTwo = undefined;
         }
 
-        //Reset match values
-        matchOne = card_id;
-        matchTwo = undefined;
-    }
+        match_card_objs[card_id].button = `<button class="btn btn-sm btn-light ${card_id + 1}" style="width: 90%; font-size: 14px;border: red solid 2px;" disabled="true" name="flip${card_id + 1}">Flip</button>\n`
+        match_card_objs[card_id].card = match_cards[card_id].image
 
-    card_objs[card_id].button = `<button class="btn btn-sm btn-light ${card_id + 1}" style="width: 90%; font-size: 14px;border: red solid 2px;" disabled="true" name="flip${card_id + 1}">Flip</button>\n`
-    card_objs[card_id].card = cards[card_id].image
+        if (matchedCount == matchCardCount){
+            message = await checkUserToSave('match', true, matchTurnScore);
+            disableMatchCards();
+            renderMatch(request, response, "disabled", matchTurnScore, message, match_card_objs)
 
-    if (matchedCount == matchCardCount){
-        //message = await backend.saveHighScore(current_user.uid, current_user.email, turnsleft, false, 'joker');
-        renderJoker(request, response, "disabled", turnsleft, 'You win', card_objs)
+        }else if (matchTurnScore == 0) {
+            message = await checkUserToSave('match', false, matchTurnScore);
+            disableMatchCards();
+            renderMatch(request, response, "disabled", matchTurnScore, message, match_card_objs)
+        } else {
 
-    }else if (turnsleft == 0) {
-        for(var i = 0; i < card_objs.length; i++){
-            card_objs[i].button = `<button class="btn btn-sm btn-light ${i + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${i + 1}">Flip</button>\n`
-            card_objs[i].card = cards[i].image
+            renderMatch(request, response, "", matchTurnScore, message, match_card_objs)
         }
 
-        //message = await backend.saveHighScore(current_user.uid, current_user.email, turnsleft, false, 'joker');
-        renderJoker(request, response, "disabled", turnsleft, 'You lose', card_objs)
-    } else {
-
-        renderJoker(request, response, "", turnsleft, message, card_objs)
+    }catch(e){
+        response.render('error.hbs',{
+            error: e
+        })
+        console.log(e)
     }
 });
 
@@ -934,13 +934,12 @@ function shuffle(array) {
   return array;
 }
 
-function renderJoker(request, response, state, turnsleft, message, card_button_array) {
+function renderMatch(request, response, state, matchTurnScore, message, card_button_array) {
     response.render('match.hbs', {
-        title: 'Joker Get | Play Game',
+        title: 'Match',
         state: state,
-        jdeck: jdeck,
-        turnsleft: turnsleft,
-        jscore: jscore,
+        matchDeck: matchDeck,
+        matchTurnScore: matchTurnScore,
         message: message,
         card_button_array: card_button_array,
         nav_email: nav_email,
@@ -951,17 +950,179 @@ function renderJoker(request, response, state, turnsleft, message, card_button_a
 }
 
 function resetVariables(){
-    turnsleft = matchCardCount * 3;
-    card_objs = [];
-    cards = [];
+    matchTurnScore = matchCardCount * 3;
+    match_card_objs = [];
+    match_cards = [];
     matchOne = undefined;
     matchTwo = undefined;
 }
+
+async function checkUserToSave(game_name, won, score){
+    message = ""
+    if(current_user != undefined){
+        message = await backend.saveHighScore(current_user.uid, current_user.email, score, false, game_name);
+    }else{
+        message = await backend.saveHighScore(undefined, undefined, score, won, game_name);
+    }
+    return message;
+}
+
+function disableMatchCards(){
+    for(var i = 0; i < match_card_objs.length; i++){
+        match_card_objs[i].button = `<button class="btn btn-sm btn-light ${i + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${i + 1}">Flip</button>\n`
+        match_card_objs[i].card = match_cards[i].image
+    }
+}
+
+/*****************************************************************************
+
+END- MATCH GAME
+
+******************************************************************************/
+
+
+
+
+/*****************************************************************************
+
+BEGIN- JOKER GAME
+
+******************************************************************************/
+
+var jokerDeck = 0;
+var jokerHand = 0;
+var joker_cards = [];
+var jokerCardCount = 52;
+var jokerTurnScore = jokerCardCount;
+var card_param = []
+var joker = "/img/joker.jpg";
+var joker_replaced = 0;
+
+app.get('/joker', async (request, response) => {
+    try {
+
+        card_param = [];
+        joker_cards = [];
+
+        for(i = 0; i < jokerCardCount; i++){
+            card_param.push({
+                card: cardback
+            });
+        }
+
+        renderJoker(request, response, "disabled", jokerTurnScore, "", card_param)
+    }
+    catch (e){
+        response.render('error.hbs',{
+            error: e
+        })
+        console.log(e);
+    }
+});
+
+app.post('/newjoker', async (request, response) => {
+    try {
+        card_param = [];
+        joker_cards = [];
+        jokerTurnScore = jokerCardCount;
+        jokerDeck = await backend.getDeck(1);
+        jokerHand = await backend.drawDeck(jokerDeck.deck_id, jokerCardCount);
+        
+        var jokercard = {"image": joker, "value": "JOKER"}
+
+        for(var i = 0; i < jokerHand.cards.length; i++){
+            joker_cards.push(jokerHand.cards[i])
+        }
+        joker_replaced = joker_cards.pop();
+        console.log(joker_replaced);
+        joker_cards.push(jokercard);
+        shuffle(joker_cards)
+
+        for (var i=0; i < joker_cards.length; i++){
+            card_param.push({
+                button: `<button class="btn btn-sm btn-light ${i+1}" style="width: 90%; font-size: 14px" name="jflip${i+1}">Flip</button>\n`,
+                button_id: i,
+                card: cardback
+            })
+        }
+
+        renderJoker(request, response, "", jokerTurnScore, "", card_param)
+
+    } catch (e) {
+        response.render('error.hbs',{
+            error: e
+        })
+        console.log(e)
+    }
+});
+
+
+app.post('/jflip/:id', async (request, response) => {
+
+    var card_id = request.params.id;
+    card_param[card_id].card = joker_cards[card_id].image
+    card_param[card_id].button = `<button style="width: 90%; font-size: 14px; visibility: hidden;">jflip</button>\n`
+
+    if (joker_cards[card_id].value == "JOKER") {
+
+        message = await checkUserToSave('joker', true, jokerTurnScore);
+        disableJokerCards();
+        renderJoker(request, response, "disabled", jokerTurnScore, message, card_param);
+
+    } else {
+        jokerTurnScore -= 1;
+        if (jokerTurnScore == 0){
+            message = await checkUserToSave('joker', false, jokerTurnScore);
+            disableJokerCards();
+            renderJoker(request, response, "disabled", jokerTurnScore, message, card_param);
+        }
+        else{
+            renderJoker(request, response, "", jokerTurnScore, "", card_param);
+        }
+    }
+});
+
+app.post('/guessjoker', async (request, response) => {
+    console.log(request.body.card);
+    console.log(joker_replaced.code);
+
+    if(joker_replaced.code == request.body.card){
+        message = await checkUserToSave('joker', true, jokerTurnScore * 2);
+        disableJokerCards();
+        renderJoker(request, response, "disabled", jokerTurnScore, message, card_param);
+        console.log('You guessed right');
+    }else{
+        message = await checkUserToSave('joker', false, 0);
+        disableJokerCards();
+        renderJoker(request, response, "disabled", jokerTurnScore, message, card_param);
+        console.log('You guessed wrong')
+    }
+
+});
+
+function renderJoker(request, response, state, jokerTurnScore, message, card_button_array) {
+    response.render('joker.hbs', {
+        title: 'Joker',
+        state: state,
+        jokerDeck: jokerDeck,
+        jokerTurnScore: jokerTurnScore,
+        message: message,
+        card_button_array: card_button_array,
+    });
+}
+
+function disableJokerCards(){
+    for(var i = 0; i < card_param.length; i++){
+        card_param[i].button = `<button style="width: 90%; font-size: 14px; visibility: hidden;">jflip</button>\n`
+        card_param[i].card = joker_cards[i].image
+    }
+}
+
+
 /*****************************************************************************
 
 END- JOKER GAME
 
 ******************************************************************************/
-
 
 module.exports = app;
