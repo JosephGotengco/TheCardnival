@@ -154,24 +154,30 @@ app.get('/login', (request, response) => {
  */
 app.get('/rankings', async (request, response) => {
     try {
-        var high_scores = await backend.getHighScores('big_or_small');
-        var output_rankings = "";
-        high_scores.forEach(function (item, index, array) {
-            output_rankings += `${index + 1}. ${item[0]} | ${item[1]} Points 
-                                <a href="/profile/${item[2]}">Profile</a> <br>`
-        });
-        if (output_rankings.length === 0) {
-            output_rankings = "No Rankings currently \n"
-        }
+        var big_or_small_scores = await backend.getHighScores('big_or_small');
+        big_or_small_str = await backend.highScoreString(big_or_small_scores);
+
+        var joker_scores = await backend.getHighScores('joker');
+        joker_str = await backend.highScoreString(joker_scores);
+
+        var cardbomb_scores = await backend.getHighScores('cardbomb');
+        cardbomb_str = await backend.highScoreString(cardbomb_scores);
+
+        var match_scores = await backend.getHighScores('match');
+        match_str = await backend.highScoreString(match_scores);
+
         response.render('rankings.hbs', {
-            title: 'Big or Small | Rankings',
-            rankings: output_rankings,
+            title: 'Rankings',
+            bos_rankings: big_or_small_str,
+            joker_rankings: joker_str,
+            cardbomb_rankings: cardbomb_str,
+            match_rankings: match_str,
             nav_email: nav_email,
             balance: balance
         })
     } catch (e) {
         response.render('error.hbs',{
-            error: error
+            error: e
         })
         console.log(e.message)
     }

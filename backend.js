@@ -109,7 +109,6 @@ async function saveHighScore(userId, email, score, won, game_name) {
     await firebase.database().ref(`users/${userId}`).once('value')
         .then(async function(snapshot) {
             test = await snapshot.val();
-            console.log(test);
             test[game_name].games_played += 1;
             test.balance += score;
             if (won) {
@@ -160,6 +159,17 @@ async function getHighScores(game_name) {
     return sortable
 }
 
+async function highScoreString(high_scores){
+    var output_rankings = "";
+    high_scores.forEach(function (item, index, array) {
+        output_rankings += `${index + 1}. ${item[0]} | ${item[1]} Points 
+                            <a href="/profile/${item[2]}">Profile</a> <br>`
+    });
+    if (output_rankings.length === 0) {
+        output_rankings = "No Rankings currently \n"
+    }
+    return output_rankings
+}
 async function subtractBalance(balance){
 
 }
@@ -448,4 +458,5 @@ module.exports = {
     deleteAccount,
     changeProfile,
     saveCardbombHighScore,
+    highScoreString
 };

@@ -28,18 +28,18 @@
   },
   "scripts": {
     "start": "node app.js",
-    "test": "mocha"
+    "test": "mocha --exit"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bhhe/BigOrSmall.git"
+    "url": "git+https://github.com/bhhe/TheCardnival.git"
   },
-  "author": "Bowen He, Patrick Nguyen",
+  "author": "Bowen He",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/bhhe/BigOrSmall/issues"
+    "url": "https://github.com/bhhe/TheCardnival/issues"
   },
-  "homepage": "https://github.com/bhhe/BigOrSmall#readme",
+  "homepage": "https://github.com/bhhe/TheCardnival#readme",
   "directories": {
     "test": "test"
   }
