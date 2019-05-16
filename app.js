@@ -930,7 +930,7 @@ function shuffle(array) {
 
 function renderMatch(request, response, state, matchTurnScore, message, card_button_array) {
     response.render('match.hbs', {
-        title: 'Joker Get | Play Game',
+        title: 'Match',
         state: state,
         matchDeck: matchDeck,
         matchTurnScore: matchTurnScore,
@@ -1096,7 +1096,7 @@ app.post('/guessjoker', async (request, response) => {
 
 function renderJoker(request, response, state, jokerTurnScore, message, card_button_array) {
     response.render('joker.hbs', {
-        title: 'Joker Get',
+        title: 'Joker',
         state: state,
         jokerDeck: jokerDeck,
         jokerTurnScore: jokerTurnScore,
