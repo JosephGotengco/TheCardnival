@@ -91,11 +91,11 @@ describe("Store tests", async () => {
 		var login = await backend.loginAccount(dummy_accounts.chris.email, dummy_accounts.chris.password, null, null);
 		var uid = login.current_user.uid;
 
-        	assert((await backend.buyItem(uid,
-			'thanos',
-			'https://firebasestorage.googleapis.com/v0/b/bigorsmall-9c0b5.appspot.com/o/thanos.jpg?alt=media&token=d3ff7293-0ea9-4bae-805e-a7c59c7210ae',
-			'profile_pictures', 500)),
-			"Sorry, you do not have enough balance");
+    	assert((await backend.buyItem(uid,
+		'thanos',
+		'https://firebasestorage.googleapis.com/v0/b/bigorsmall-9c0b5.appspot.com/o/thanos.jpg?alt=media&token=d3ff7293-0ea9-4bae-805e-a7c59c7210ae',
+		'profile_pictures', 500)),
+		"Sorry, you do not have enough balance");
 	});
 	
 	it("Test buying item with sufficient score... should work", async () => {
@@ -103,11 +103,12 @@ describe("Store tests", async () => {
 		var uid = login.current_user.uid;
 
 		console.log('adding fake free points to Chris\' profile');
-		await backend.saveHighScore(uid, dummy_accounts.chris.email, 1500, true);
+		await backend.saveHighScore(uid, dummy_accounts.chris.email, 1500, true, "big_or_small");
 
 		console.log((await backend.buyItem(uid,
 			'thanos',
 			'https://firebasestorage.googleapis.com/v0/b/bigorsmall-9c0b5.appspot.com/o/thanos.jpg?alt=media&token=d3ff7293-0ea9-4bae-805e-a7c59c7210ae',
 			'profile_pictures', 500)));
+		await backend.deleteAccount();
 	});
 });

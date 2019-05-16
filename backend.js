@@ -80,6 +80,8 @@ var deleteAccount = async () => {
         await firebase.database().ref(`users/${uid}`).remove();
         await firebase.database().ref(`big_or_small/${uid}`).remove();
         await firebase.database().ref(`joker/${uid}`).remove();
+        await firebase.database().ref(`match/${uid}`).remove();
+        await firebase.database().ref(`cardbomb/${uid}`).remove();
 
         return 'delete success'
     }).catch(function(error){
@@ -98,7 +100,10 @@ async function saveHighScore(userId, email, score, won, game_name) {
     var test = {}
 
     if (userId === undefined) {
-        return "Sorry, Guests cannot be part of the rankings"
+        if(won){
+            return `Win ${score} pts, Guests cannot be part of the rankings.`
+        }
+        return `Lose ${score} pts, Guests cannot be part of the rankings.`
     }
 
     await firebase.database().ref(`users/${userId}`).once('value')
@@ -210,6 +215,11 @@ async function writeUserData(userId, email, fname, lname, name, imageUrl) {
             high_score: 0
         },
         joker: {
+            games_played: 0,
+            games_won: 0,
+            high_score: 0
+        },
+        match: {
             games_played: 0,
             games_won: 0,
             high_score: 0
@@ -437,5 +447,5 @@ module.exports = {
     buyItem,
     deleteAccount,
     changeProfile,
-    saveCardbombHighScore
+    saveCardbombHighScore,
 };
