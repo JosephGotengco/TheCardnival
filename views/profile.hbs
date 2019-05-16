@@ -109,11 +109,13 @@
                                             data-toggle="list" href="#list-bsgame" role="tab" aria-controls="bsgame">Big
                                             or Small</a>
                                         <a class="list-group-item list-group-item-action" id="list-game2"
-                                            data-toggle="list" href="#game2" role="tab" aria-controls="game2">Joker
-                                            Get</a>
+                                            data-toggle="list" href="#game2" role="tab" aria-controls="game2">Joker</a>
                                         <a class="list-group-item list-group-item-action" id="list-game3"
                                             data-toggle="list" href="#game3" role="tab"
                                             aria-controls="game3">CardBomb!</a>
+                                        <a class="list-group-item list-group-item-action" id="list-game4"
+                                            data-toggle="list" href="#game4" role="tab"
+                                            aria-controls="game4">Match</a>
                                     </div>
                                 </div>
                             </div>
@@ -122,7 +124,7 @@
                                     aria-labelledby="list-bsgame-list">
                                     <div class="card">
                                         <div class="card-body">
-                                            <h1>Big or Small Rankings</h1>
+                                            <h1>Big or Small Stats</h1>
                                             <canvas id="myDoughnutChart" max-width="260" height="260"></canvas>
                                         </div>
                                     </div>
@@ -130,7 +132,7 @@
                                 <div class="tab-pane fade" id="game2" role="tabpanel" aria-labelledby="list-game2">
                                     <div class="card">
                                         <div class="card-body">
-                                            <h1>Joker Get Rankings</h1>
+                                            <h1>Joker Stats</h1>
                                             <canvas id="myDoughnutChart2" max-width="260" height="260"></canvas>
                                         </div>
                                     </div>
@@ -138,8 +140,16 @@
                                 <div class="tab-pane fade" id="game3" role="tabpanel" aria-labelledby="list-game3">
                                     <div class="card">
                                         <div class="card-body">
-                                            <h1>CardBomb! Rankings</h1>
+                                            <h1>CardBomb Stats</h1>
                                             <canvas id="myDoughnutChart3" max-width="260" height="260"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="game4" role="tabpanel" aria-labelledby="list-game4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h1>Match Stats</h1>
+                                            <canvas id="myDoughnutChart4" max-width="260" height="260"></canvas>
                                         </div>
                                     </div>
                                 </div>
@@ -212,6 +222,23 @@
             },
         });
 
+        var ctx4 = document.getElementById("myDoughnutChart4");
+        ctx4.font = "32px Verdana";
+        ctx4.fillStyle = '#000';
+        var myDoughnutChart4 = new Chart(ctx4, {
+            "type": "doughnut",
+            "data": {
+                "labels": ["Games Played", "Games Won"],
+                "datasets": [{
+                    "label": {{ match.high_score }},
+            "data": [{{ match.games_played }}, {{ match.games_won }}],
+        "backgroundColor": [
+            "rgb(255, 99, 132)",
+            "rgb(54, 162, 235)"]
+                }],
+            },
+        });
+
         Chart.pluginService.register({
             beforeDraw: function (chart) {
                 var width = chart.chart.width, height = chart.chart.height, ctx = chart.chart.ctx;
@@ -225,6 +252,8 @@
                     text = 'Highest:' + {{ joker.high_score }} + ' pts';
                 }else if(chart.id == 2){
                     text = 'Highest:' + {{ cardbomb.high_score }} + ' pts';
+                }else if(chart.id == 3){
+                    text = 'Highest:' + {{ match.high_score }} + ' pts';
                 }
                 textX = Math.round((width - ctx.measureText(text).width) / 2)
                 textY = height / 1.875;
