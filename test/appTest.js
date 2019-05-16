@@ -109,7 +109,7 @@ describe("Store tests", async () => {
 	
 	it("Test buying item with sufficient score... should work", async () => {
 		console.log('adding fake free points to Chris\' profile');
-		await backend.saveHighScore(uid, dummy_accounts.chris.email, 1500, true);
+		await backend.saveHighScore(uid, dummy_accounts.chris.email, 1500, true, 'big_or_small');
 
 		assert((await backend.buyItem(uid,
 			'thanos',
