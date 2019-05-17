@@ -1,7 +1,5 @@
 /*------------------------------------------------------------Global Settings------------------------------------------------------------*/
-div {
-    border: red solid 0px;
-}
+/* div { border: red solid 2px;} */
 
 html,
 body {
@@ -75,12 +73,41 @@ form .input-group-text {
     background-color: #006b10;
     color: #dddddd;
 }
-
+/* cardbomb start */
 .cardbomb_game {
     background-image: url(https://images.unsplash.com/photo-1494178270175-e96de2971df9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=972&q=80);
-    color: whitesmoke;
+    color:whitesmoke;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center 0%; 
+    background-color: black;
 }
 
+.pokerbtn {
+    width: 7rem;
+    height: 5rem;
+    background-color: white;
+    color: red;
+    font-weight: bold;
+    border-radius: 0.5rem;
+}
+
+.pokerform {
+    max-width:7rem;
+    margin:auto;
+}
+
+.pokerform:hover .pokerbtn {
+    border: solid black 1px;
+    color: darkred;
+    box-shadow: 0 0.5em 1em -0.4em grey;
+    transform: translateY(-0.1em);
+    color: black;
+}
+
+
+
+/* cardbomb end */
 .game_screen {
     margin-top: 56px;
     padding-top: 2rem;

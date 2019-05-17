@@ -722,6 +722,7 @@ async function cardbomb(request, response){
 	    obj.main_card = cardback;
 	    obj.state = "disabled";
 	    obj.remaining = "";
+	    obj.null_cards = false;
 
         renderCardbombGame(request, response, obj);
     } catch (e) {
@@ -758,6 +759,10 @@ function renderCardbombGame(request, response, obj) {
    	cardbombs_array_images = []; 
     }
 
+    if (!obj.hasOwnProperty('null_cards')) {
+   	obj.null_cards = true; 
+    }
+
     response.render('cardbomb.hbs', {
         title: 'Cardbomb | Play Game',
         card: obj.main_card,
@@ -773,7 +778,8 @@ function renderCardbombGame(request, response, obj) {
 	login_msg: login_msg,
 	cardbombs_array: cardbombs_array_images,
 	cardbomb_raise: obj.state,
-	cardbomb_leavegame: obj.state
+	cardbomb_leavegame: obj.state,
+	null_cards: obj.null_cards
     });
 }
 
@@ -824,6 +830,7 @@ async function cardbombNewgame(request, response){
 	    obj.main_card = card.cards[0].image;
 	    obj.remaining = 51;
 	    obj.state = "";
+	    obj.null_cards = true;
 
         renderCardbombGame(request, response, obj);
     } catch (e) {
@@ -869,6 +876,22 @@ async function cardbombRaise(request, response) {
     }
 }
 
+async function nCardsBeforeNextBomb () {
+	let n = 0;
+
+	while (card.remaining > 0) {
+		let next_card = await backend.drawDeck(deck.deck_id, 1);
+		
+		if ( cardbombs_array.indexOf(next_card.cards[0].code) < 0 ) {
+			n++;
+		} else {
+			break;	
+		}
+	}
+
+	return n;
+}
+
 async function cardbombBoom(request, response) {
     var lose_message = `BOOM! that was a CARDBOMB! `;
 
@@ -889,7 +912,11 @@ async function cardbombBoom(request, response) {
 }
 
 async function cardbombLeave(request, response) {
-    let message = `You have decided to leave with your winnings. Congratulations you have won ${score} points! `;
+    let n = await nCardsBeforeNextBomb();
+    let tscore = score;
+    score = score - (5 * n);
+
+    let message = `You have decided to leave with your winnings. ${n} cards remaining before next bomb. Your final score is ${tscore} - (${n} * 5) => ${score}.`;
 
     if (current_user !== undefined) {
 

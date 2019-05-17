@@ -4,61 +4,84 @@
 
 <body class="cardbomb_game">
     {{> header}}
-    <br><br>
     <div id='custom-jumbo' class="jumbotron container-fluid">
-        <div class="container game_screen mt-5 mb-1" id="content">
+        <div class="container game_screen mt-0" id="content">
 
-            
-            
-            
-            
-            
-            
-            
-            <h4 class="game_style">Welcome {{name}}, to the game of CardBomb.</h1>
-            <h1 class="game_style">Score: {{score}} Points</h4>
-            <h4 class="game_style">Remaining Cards: {{remaining}}</h4>
 
+            <div class="container">
+                <div class="row">
+                    <div class="col" style="color: whitesmoke;">
+                        <h4 class="game_style">Welcome {{name}}, to the game of CardBomb.</h1>
+                        <h1 class="game_style">Score: {{score}} Points</h4>
+                        <h4 class="game_style scorepulse" style="color: blue; min-height:2rem; background: white; padding: 10px;">{{{game_state}}}</h4>
+			{{#if null_cards}}
+
+            			<h4 class="game_style scorepulse" style="color: red; min-height:2rem; background: white; padding: 10px 10px;">Here are your drawn bombs</h4>
+
+				{{/if}}
+                    </div>
+
+		   
+                </div>
+		{{#if null_cards}}
+			 <div class="row" style="display: flex; background: white; padding: 20px 10px; justify-content: space-around; align-items: center; margin-top: 0px; margin-bottom: 50px; margin-right: 10px; margin-left: 10px;">
+		    
+		   	
 		{{#each cardbombs_array}}
 
-            <img src={{this}} class="gamecard" alt="bomb" class=''>
+            <img src={{this}} class="gamecard" alt="bomb" class='' style="width: 175px; height: auto;">
                                 {{/each}}
 
 
 
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-	<br>
-            <img src={{card}} class="gamecard" alt="NextCard" class='playcard'>
-            <img src={{deck_top}} class="gamecard" alt="NextCard" class='playcard'>
+		    </div>
+				{{/if}}
 
-            <form class="container" id="form1" method="GET" action="/cardbomb_newgame">
-                <button class="btn btn-dark btn-lg game_style" type="submit" value="New Game"{{cardbomb}}>New Game</button>
-            </form>
 
-            <form class="container" id="form1" method="POST" action="/cardbomb_raise">
-                <button class="btn btn-dark btn-lg game_style" type="submit" value="Raise" {{cardbomb_raise}}>Raise</button>
-            </form>
+                <div class="row" style="padding: 0px 50px;">
 
-	
-            <form class="container" id="form1" method="POST" action="/cardbomb_leavegame">
-                <button class="btn btn-dark btn-lg game_style" type="submit" value="Leave Game" {{cardbomb_leavegame}}>Leave Game</button>
-            </form>
+                    <div class="col">
 
-            <form action="/cardbomb" method="post" id="cardbomb" onsubmit="return confirm('Change Cardback?')">
-            </form>
+                        <img src={{deck_top}} class="gamecard" alt="NextCard" class='playcard'>
+                    </div>
 
-	    <p> {{game_state}} </p>
+                    <div class="col">
+                        <img src={{card}} class="gamecard" alt="NextCard" class='playcard'>
 
+                    </div>
+
+                    <div class="col">
+                        <p class="game_style">Remaining Cards: {{remaining}}</p>
+                        <form class="pokerform" id="form1" method="GET" action="/cardbomb_newgame">
+                            <button class="btn btn-light btn-lg game_style pokerbtn" type="submit" value="New Game"{{cardbomb}}>New Game</button>
+                        </form>
+
+                        <form class="pokerform" id="form1" method="POST" action="/cardbomb_raise">
+                            <button class="btn btn-light btn-lg game_style pokerbtn" type="submit" value="Raise" {{cardbomb_raise}}>Raise</button>
+                        </form>
+                        <form class="pokerform" id="form1" method="POST" action="/cardbomb_leavegame">
+                            <button class="btn btn-light btn-lg game_style pokerbtn" type="submit" value="Leave Game" {{cardbomb_leavegame}}>Leave Game</button>
+                        </form>
+                        
+                    </div>
+                </div>
+
+                </div>
+		
+		<div style="text-align: center; padding: 55px;">
+		
+		
 	    <a href="/login">
 	    	<p> {{login_msg}} </p>
 	    </a>
 
 
-        </div>
+
+		</div>
+
+            </div>
+
+
     </div>
     {{> footer}}
 </body>
