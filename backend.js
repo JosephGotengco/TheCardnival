@@ -422,6 +422,52 @@ var shuffleDeck = (deck_id) => {
     })
 };
 
+/*
+    Draw a specific card from the deck
+ */
+var drawCardWithCode = (deck_id, pile_name, code) => {
+    return new Promise((resolve, reject) => {
+        request({
+            url: "https://deckofcardsapi.com/api/deck/" + deck_id + "/pile/" + pile_name + "/draw/?cards=" + code,
+            json: true
+        }, (error, response, body) => {
+            if (error) {
+                reject('Cannot connect to Deck Of Cards API')
+            } else if (body.status === '401') {
+                reject('Unauthorized Access to webpage')
+            } else if (body.shuffled === '404') {
+                reject('No API method supports the URL')
+            } else if (body.error !== undefined) {
+                reject(body.error)
+            } else {
+                resolve(body)
+            }
+        });
+    })
+}
+
+var createBombsPile = (deck_id, code) => {
+    return new Promise((resolve, reject) => {
+        request({
+            url: "https://deckofcardsapi.com/api/deck/" + deck_id + "/pile/bombs/add/?cards=" + code,
+            json: true
+        }, (error, response, body) => {
+            if (error) {
+                reject('Cannot connect to Deck Of Cards API')
+            } else if (body.status === '401') {
+                reject('Unauthorized Access to webpage')
+            } else if (body.shuffled === '404') {
+                reject('No API method supports the URL')
+            } else if (body.error !== undefined) {
+                reject(body.error)
+            } else {
+                resolve(body)
+            }
+        });
+    })
+
+}
+
 function isInArray(value, array) {
     return array.indexOf(value) > -1;
 }
@@ -449,5 +495,6 @@ module.exports = {
     buyItem,
     deleteAccount,
     changeProfile,
-    highScoreString
+    drawCardWithCode,
+    createBombsPile
 };
