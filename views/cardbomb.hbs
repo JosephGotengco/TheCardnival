@@ -30,6 +30,7 @@
                 <button class="btn btn-dark btn-lg game_style" type="submit" value="Raise" {{cardbomb_raise}}>Raise</button>
             </form>
 
+	
             <form class="container" id="form1" method="POST" action="/cardbomb_leavegame">
                 <button class="btn btn-dark btn-lg game_style" type="submit" value="Leave Game" {{cardbomb_leavegame}}>Leave Game</button>
             </form>
@@ -37,9 +38,11 @@
             <form action="/cardbomb" method="post" id="cardbomb" onsubmit="return confirm('Change Cardback?')">
             </form>
 
+	    <p> {{game_state}} </p>
 
-
-
+	    <a href="/login">
+	    	<p> {{login_msg}} </p>
+	    </a>
 
 
         </div>

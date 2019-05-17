@@ -647,35 +647,24 @@ START - CARDBOMB GAME
  ******************************************************************************/
 
 var cardbomb_game = null;
-
-async function cardbombNewgame(request, response){
-    score = 0;
-
-    try {
-	if (current_user == undefined) {
-		response.render('login.hbs', {
-        		title: 'Big or Small | Login',
-        		nav_email: nav_email,
-       			balance: balance
-    		})
-		return;
-	}
-	deck = await backend.getDeck(1);
-    deck = await backend.shuffleDeck(deck.deck_id);
-	card = await backend.drawDeck(deck.deck_id, 1);
-	cardbomb_game = true;
-        renderCardbombGame(request, response, "", card.cards[0].image, cardback, 52, "");
-    } catch (e) {
-        response.render('error.hbs',{
-            error: e
-        })
-        console.log(e)
-    }
+const cardbomb_obj = {
+	state: "",
+	main_card: null,
+	deck_top: cardback,
+	remaining: null,
+	game_state: ""
 }
+
 
 app.get('/cardbomb', cardbombNewgame);
 
 app.post('/cardbomb_raise', async (request, response) => {
+	
+    if (cardbomb_game == null) {
+   	 cardbombNewgame(request, response);
+	 return;
+    }
+
     try {
         if (card == 0) {
             card = await backend.drawDeck(deck.deck_id, 1);
@@ -699,6 +688,12 @@ app.post('/cardbomb_raise', async (request, response) => {
 });
 
 app.post('/cardbomb_leavegame', async (request, response) => {
+
+    if (cardbomb_game == null) {
+   	 cardbombNewgame(request, response);
+	 return;
+    }
+
     try {
         cardbombLeave(request, response);
     } catch (e) {
@@ -709,28 +704,75 @@ app.post('/cardbomb_leavegame', async (request, response) => {
     }
 });
 
-function renderCardbombGame(request, response, state, main_card, deck_top, remaining, game_state) {
+function renderCardbombGame(request, response, obj) {
+    /*
+     * obj = {
+     * 		state: disabled/"",
+     * 		main_card: ,
+     * 		deck_top: ,
+     * 		remaining: ,
+     * 		game_state: 
+     * }
+     */
     var name = "Guest";
+    var login_msg = "";
     if (current_user !== undefined) {
-        name = `${current_user.fname} ${current_user.lname}`;
+        name = `${current_user.fname} ${current_user.lname}`;	
+    } else {
+    	login_msg = "please log in to save your scores";
     }
     response.render('cardbomb.hbs', {
         title: 'Cardbomb | Play Game',
-        card: main_card,
-        deck_top: deck_top,
+        card: obj.main_card,
+        deck_top: obj.deck_top,
         score: score,
-        remaining: remaining,
+        remaining: obj.remaining,
         name: name,
-        game_state: game_state,
+        game_state: obj.game_state,
         nav_email: nav_email,
         balance: balance,
         music: music,
-        cardback: cardback
+        cardback: cardback,
+	login_msg: login_msg
     });
+}
+
+async function cardbombNewgame(request, response){
+    score = 0;
+
+    try {
+	    /*
+	if (current_user == undefined) {
+		response.render('login.hbs', {
+        		title: 'Big or Small | Login',
+        		nav_email: nav_email,
+       			balance: balance
+    		})
+		return;
+	}
+	*/
+	deck = await backend.getDeck(1);
+    	deck = await backend.shuffleDeck(deck.deck_id);
+	card = await backend.drawDeck(deck.deck_id, 1);
+	cardbomb_game = true;
+	let obj = cardbomb_obj;
+	    obj.game_state = "Starting a new game. Good luck!";
+	    obj.main_card = card.cards[0].image;
+	    obj.remaining = 52;
+
+        renderCardbombGame(request, response, obj);
+    } catch (e) {
+        response.render('error.hbs',{
+            error: e
+        })
+        console.log(e)
+    }
 }
 
 async function cardbombRaise(request, response) {
     var add = 0;
+
+	console.log(request.body);
 
     //pick one of 5 different score multipliers based on the total number of cards drawn
     for (var n = 1; n < 6; n++){
@@ -743,8 +785,14 @@ async function cardbombRaise(request, response) {
     
     card = await backend.drawDeck(deck.deck_id, 1);
 
+    let obj = cardbomb_obj;
+	obj.main_card = card.cards[0].image;
+	obj.remaining = card.remaining;
+	
     if (card.remaining > 0) {
-        renderCardbombGame(request, response, "", card.cards[0].image, cardback, card.remaining, `Raising ${add}!`);
+	obj.game_state = `Raising ${add}!`;
+
+        renderCardbombGame(request, response, obj);
     } else {
         var win_message = `Congratulations, you have finished the deck with ${score} points`;
         if (current_user !== undefined) {
@@ -752,31 +800,46 @@ async function cardbombRaise(request, response) {
             win_message = await backend.saveHighScore(current_user.uid, current_user.email, score, true, 'cardbomb');
             balance += score;
         }
-        renderCardbombGame(request, response, "", card.cards[0].image, cardback, card.remaining, win_message)
+	obj.game_state = win_message;
+        renderCardbombGame(request, response, obj);
 	cardbomb_game = null;
     }
 }
 
 async function cardbombBoom(request, response) {
-    var lose_message = `BOOM! you lost the game`;
+    var lose_message = `BOOM! that was a CARDBOMB! you lost the game`;
     if (current_user !== undefined) {
 
         lose_message = await backend.saveHighScore(current_user.uid, current_user.email, score, false, 'cardbomb');
     }
     score = 0;
-    renderCardbombGame(request, response, "disabled", card.cards[0].image, cardback, card.remaining, lose_message); 
+
+    let obj = cardbomb_obj;
+	obj.state = "disabled";
+	obj.main_card = card.cards[0].image;
+	obj.remaining = card.remaining;
+	obj.game_state = lose_message;
+
+    renderCardbombGame(request, response, obj); 
     cardbomb_game = null;
 }
 
 async function cardbombLeave(request, response) {
-    message = `You have decided to leave with your winnings. Congratulations you have won ${score} points!`;
+    message = `You have decided to leave with your winnings. Congratulations you have won ${score} points! `;
     if (current_user !== undefined) {
 
-        message = await backend.saveHighScore(current_user.uid, current_user.email, score, false, 'cardbomb');
+        message += await backend.saveHighScore(current_user.uid, current_user.email, score, false, 'cardbomb');
         balance += score;
     }
     score = 0;
-    renderCardbombGame(request, response, "disabled", card.cards[0].image, cardback, card.remaining, message);
+
+    let obj = cardbomb_obj;
+	obj.state = "disabled";
+	obj.main_card = card.cards[0].image;
+	obj.remaining = card.remaining;
+	obj.game_state = message;
+
+    renderCardbombGame(request, response, obj);
     cardbomb_game = null;
 }
 

@@ -11,14 +11,6 @@ var current_user = undefined;
 
 ******************************************************************************/
 
-async function saveCardbombHighScore (a, b, c, d) {
-	console.log(a);
-	console.log(b);
-	console.log(c);
-	console.log(d);
-}
-
-
 /*
 	Add accounts info to JSON, CREATE GAME FILE if it doesnt exist already
 */
@@ -457,6 +449,5 @@ module.exports = {
     buyItem,
     deleteAccount,
     changeProfile,
-    saveCardbombHighScore,
     highScoreString
 };
