@@ -4,6 +4,9 @@ const bodyParser = require('body-parser');
 const backend = require('./backend');
 const firebase = require('firebase');
 const session = require('express-session');
+const cookieParser = require('cookie-parser');
+const passport = require('passport');
+
 const path = require('path');
 const port = process.env.PORT || 8080;
 
@@ -34,6 +37,8 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
+app.use(cookieParser());
+
 app.use(
     session({
         secret: "secretcode",
@@ -45,6 +50,9 @@ app.use(
         }
     })
 );
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 var deck = 0;
 var card = 0;
