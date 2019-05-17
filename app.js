@@ -113,6 +113,7 @@ app.post('/register', async (request, response) => {
     }
 });
 
+//test
 /*
     Make RESTFUL POST request and signout. Render login screen.
  */
