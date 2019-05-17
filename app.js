@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const backend = require('./backend');
 const firebase = require('firebase');
+const session = require('express-session');
 const path = require('path');
 const port = process.env.PORT || 8080;
 
@@ -32,6 +33,18 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
 }));
+
+app.use(
+    session({
+        secret: "secretcode",
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            maxAge: 24 * 60 * 60 * 1000,
+            sameSite: true
+        }
+    })
+);
 
 var deck = 0;
 var card = 0;
@@ -1280,4 +1293,6 @@ END- JOKER GAME
 
 ******************************************************************************/
 
-module.exports = app;
+module.exports = {
+	checkUserToSave
+};
