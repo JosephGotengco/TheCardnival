@@ -4,45 +4,107 @@
 
 <body class="cardbomb_game">
     {{> header}}
-    <br><br>
     <div id='custom-jumbo' class="jumbotron container-fluid">
-        <div class="container game_screen mt-5 mb-1" id="content">
-
-            
-            
-            
-            
-            
-            
-            
-            <h4 class="game_style">Welcome {{name}}, to the game of CardBomb.</h1>
-            <h1 class="game_style">Score: {{score}} Points</h4>
-            <h4 class="game_style">Remaining Cards: {{remaining}}</h4>
-
-            <img src={{card}} class="gamecard" alt="NextCard" class='playcard'>
-            <img src={{deck_top}} class="gamecard" alt="NextCard" class='playcard'>
-
-            <form class="container" id="form1" method="GET" action="/cardbomb">
-                <button class="btn btn-dark btn-lg game_style" type="submit" value="New Game"{{cardbomb}}>New Game</button>
-            </form>
-
-            <form class="container" id="form1" method="POST" action="/cardbomb_raise">
-                <button class="btn btn-dark btn-lg game_style" type="submit" value="Raise" {{cardbomb_raise}}>Raise</button>
-            </form>
-
-            <form class="container" id="form1" method="POST" action="/cardbomb_leavegame">
-                <button class="btn btn-dark btn-lg game_style" type="submit" value="Leave Game" {{cardbomb_leavegame}}>Leave Game</button>
-            </form>
-
-            <form action="/cardbomb" method="post" id="cardbomb" onsubmit="return confirm('Change Cardback?')">
-            </form>
+        <div class="container game_screen pt-1 mt-0" id="content">
 
 
+            <div class="container">
+                <div class="row">
+                    <div class="col" style="color: whitesmoke;">
+                        <h4 class="game_style">Welcome {{name}}, to the game of CardBomb.</h1>
+                        <h2 class="game_style">Score: {{score}} Points</h4>
+                        <h4 class="game_style scorepulse" style="color: blue;">{{{game_state}}}</h4>
+			{{#if null_cards}}
+
+            			{{!-- <h4 class="game_style scorepulse" style="color: red;">Here are your drawn bombs</h4> --}}
+
+				{{/if}}
+                    </div>
+
+		   
+                </div>
+
+
+                <div class="row" style="padding: 0px 50px;">
+<div class="col-xs-1 col-sm-3 col-xl-3">
+    
+		{{#if null_cards}}
+			 {{!-- <div class="row"> --}}
+                  {{!-- style="display: flex; background: white; padding: 20px 10px; justify-content: space-around; align-items: center; margin-top: 0px; margin-bottom: 50px; margin-right: 10px; margin-left: 10px;" --}}
+		    
+		   	
+                        <h4 class="game_style" style="top:-10rem;">Bombs</h2>
+		{{#each cardbombs_array}}
+
+            {{!-- <img src={{this}} class="gamecard" alt="bomb" class='' style="width: 175px; height: auto;"> --}}
+            <img src={{this}} class="gamecard bombs m-1" alt="bomb">
+                                {{/each}}
+
+
+		    {{!-- </div> --}}
+            {{else}}
+                                    <div class="container game_body mt-3 py-4" style="border-radius: 2rem; border: solid white 1px; min-width: 150px;">
+                        <h3>Instructions</h3>
+
+                        <p>When starting a new game, four <em>BOMB</em> cards are revealed</p>
+                        <p>Draw cards, and if they are not a <em>BOMB</em>, then you get points!</p>
+                        <p>Fold when you feel like there is a <em>BOMB</em> coming</p>
+                        <p>Gain points for each safe card you have drawn, lose points for how many safe cards are left until the next <em>BOMB</em></p>
+                        
+                        
+                        </div>
+				{{/if}}
+                
+</div>
+                    <div class="col">
+                        <br>
+                        <img src={{deck_top}} class="gamecard" alt="NextCard" class='playcard'>
+                        <img src={{card}} class="gamecard" alt="NextCard" class='playcard'>
+                        <div class="col" style="text-align: center;">
+
+                        <a style="font-size: 1rem; color:cyan;" href="/login"><p  class="mt-4"> {{login_msg}} </p></a>
+                        </div>
+                    </div>
+{{!-- 
+                    <div class="col">
+
+                    </div> --}}
+
+                    <div class="col-xs col-md-1 col-xl-3">
+                        <div class="container game_body mt-3 py-4" style="border-radius: 2rem; border: solid white 1px; min-width: 150px;">
+
+                        <p class="game_style">Remaining Cards: {{remaining}}</p>
+                        <form class="pokerform" id="form1" method="GET" action="/cardbomb_newgame">
+                            <button class="btn btn-light btn-lg game_style pokerbtn" type="submit" value="New Game"{{cardbomb}}>New Game</button>
+                        </form>
+
+                        <form class="pokerform" id="form1" method="POST" action="/cardbomb_raise">
+                            <button class="btn btn-light btn-lg game_style pokerbtn" type="submit" value="Draw" {{cardbomb_raise}}>Raise</button>
+                        </form>
+                        <form class="pokerform" id="form1" method="POST" action="/cardbomb_leavegame">
+                            <button class="btn btn-light btn-lg game_style pokerbtn" type="submit" value="Fold" {{cardbomb_leavegame}}>Leave Game</button>
+                        </form>
+                        
+                        </div>
+                    </div>
+                </div>
+
+                </div>
+		
+		<div style="text-align: center; padding: 55px;">
+		
+		
+	    {{!-- <a href="/login">
+	    	<p> {{login_msg}} </p>
+	    </a> --}}
 
 
 
+		</div>
 
-        </div>
+            </div>
+
+
     </div>
     {{> footer}}
 </body>

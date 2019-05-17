@@ -8,6 +8,7 @@ const request = require('supertest');
 chai.use(chaiHttp);
 const app = require('../app.js');
 const backend = require('../backend')
+
 function wait(ms){
     var start = new Date().getTime();
     var end = start;
@@ -127,6 +128,18 @@ describe("Store tests", async () => {
 
 	it("Testing using the newly purchased item", async () => {
 		assert(await backend.changeProfile(uid, 'thanos', "https://firebasestorage.googleapis.com/v0/b/bigorsmall-9c0b5.appspot.com/o/thanos.jpg?alt=media&token=d3ff7293-0ea9-4bae-805e-a7c59c7210ae", "profile_pictures"), "Successfully changed profile_pictures");
-		await backend.deleteAccount();
 	});	
+});
+
+describe("Cardbomb", () => {
+	var login = null;
+	var uid = null;
+
+	it("", async () => {
+		login = await backend.loginAccount(dummy_accounts.chris.email, dummy_accounts.chris.password, null, null);
+		uid = login.current_user.uid;
+		
+		assert((await app.checkUserToSave("cardbomb", true, 10)), "");
+		await backend.deleteAccount();
+	});
 });
