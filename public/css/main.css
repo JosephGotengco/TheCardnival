@@ -105,7 +105,18 @@ form .input-group-text {
     color: black;
 }
 
+.cardbomb_game .bombs {
+    width: 45%;
+}
 
+.scorepulse {
+    min-height:2rem; 
+    background: rgba(255, 255, 255, 0.7); 
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 400px;
+    /* min-width: 1; */
+}
 
 /* cardbomb end */
 .game_screen {
