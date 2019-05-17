@@ -11,14 +11,6 @@ var current_user = undefined;
 
 ******************************************************************************/
 
-async function saveCardbombHighScore (a, b, c, d) {
-	console.log(a);
-	console.log(b);
-	console.log(c);
-	console.log(d);
-}
-
-
 /*
 	Add accounts info to JSON, CREATE GAME FILE if it doesnt exist already
 */
@@ -80,6 +72,8 @@ var deleteAccount = async () => {
         await firebase.database().ref(`users/${uid}`).remove();
         await firebase.database().ref(`big_or_small/${uid}`).remove();
         await firebase.database().ref(`joker/${uid}`).remove();
+        await firebase.database().ref(`match/${uid}`).remove();
+        await firebase.database().ref(`cardbomb/${uid}`).remove();
 
         return 'delete success'
     }).catch(function(error){
@@ -98,13 +92,15 @@ async function saveHighScore(userId, email, score, won, game_name) {
     var test = {}
 
     if (userId === undefined) {
-        return "Sorry, Guests cannot be part of the rankings"
+        if(won){
+            return `Win ${score} pts, Guests cannot be part of the rankings.`
+        }
+        return `Lose ${score} pts, Guests cannot be part of the rankings.`
     }
 
     await firebase.database().ref(`users/${userId}`).once('value')
         .then(async function(snapshot) {
             test = await snapshot.val();
-            console.log(test);
             test[game_name].games_played += 1;
             test.balance += score;
             if (won) {
@@ -155,6 +151,17 @@ async function getHighScores(game_name) {
     return sortable
 }
 
+async function highScoreString(high_scores){
+    var output_rankings = "";
+    high_scores.forEach(function (item, index, array) {
+        output_rankings += `${index + 1}. ${item[0]} | ${item[1]} Points 
+                            <a href="/profile/${item[2]}">Profile</a> <br>`
+    });
+    if (output_rankings.length === 0) {
+        output_rankings = "No Rankings currently \n"
+    }
+    return output_rankings
+}
 async function subtractBalance(balance){
 
 }
@@ -210,6 +217,11 @@ async function writeUserData(userId, email, fname, lname, name, imageUrl) {
             high_score: 0
         },
         joker: {
+            games_played: 0,
+            games_won: 0,
+            high_score: 0
+        },
+        match: {
             games_played: 0,
             games_won: 0,
             high_score: 0
@@ -410,6 +422,52 @@ var shuffleDeck = (deck_id) => {
     })
 };
 
+/*
+    Draw a specific card from the deck
+ */
+var drawCardWithCode = (deck_id, pile_name, code) => {
+    return new Promise((resolve, reject) => {
+        request({
+            url: "https://deckofcardsapi.com/api/deck/" + deck_id + "/pile/" + pile_name + "/draw/?cards=" + code,
+            json: true
+        }, (error, response, body) => {
+            if (error) {
+                reject('Cannot connect to Deck Of Cards API')
+            } else if (body.status === '401') {
+                reject('Unauthorized Access to webpage')
+            } else if (body.shuffled === '404') {
+                reject('No API method supports the URL')
+            } else if (body.error !== undefined) {
+                reject(body.error)
+            } else {
+                resolve(body)
+            }
+        });
+    })
+}
+
+var createBombsPile = (deck_id, code) => {
+    return new Promise((resolve, reject) => {
+        request({
+            url: "https://deckofcardsapi.com/api/deck/" + deck_id + "/pile/bombs/add/?cards=" + code,
+            json: true
+        }, (error, response, body) => {
+            if (error) {
+                reject('Cannot connect to Deck Of Cards API')
+            } else if (body.status === '401') {
+                reject('Unauthorized Access to webpage')
+            } else if (body.shuffled === '404') {
+                reject('No API method supports the URL')
+            } else if (body.error !== undefined) {
+                reject(body.error)
+            } else {
+                resolve(body)
+            }
+        });
+    })
+
+}
+
 function isInArray(value, array) {
     return array.indexOf(value) > -1;
 }
@@ -437,5 +495,6 @@ module.exports = {
     buyItem,
     deleteAccount,
     changeProfile,
-    saveCardbombHighScore
+    drawCardWithCode,
+    createBombsPile
 };

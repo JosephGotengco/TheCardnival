@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+{{> head}}
+
+<body class="game_body">
+    {{> header}}
+    <br><br>
+    <div id='custom-jumbo' class="jumbotron container-fluid">
+        <div class="row">
+            <div class="col-lg-3" align="center"
+                style="position: fixed; margin-left:3px; max-width: 30%; min-width: 300px;">
+                <br><br>
+                <h1 align="center">{{title}}</h1><br>
+                <div class="col-12">
+                    <div class="col-6">
+                        <form method="POST" action="/newjoker">
+                            <button class="btn btn-dark" style="display: inline-block;" type="submit">New Game</button>
+                        </form>
+                    </div>
+
+                    <form method="POST" action="/guessjoker">
+                        <div class="col-6">
+                            <button class="btn btn-dark" style="display: inline-block" type="submit" id="cardButton"
+                                {{state}}>Guess Joker</button>
+                        </div>
+                        <div class="col-6">
+                            <select name="card" id="cardValue" class="form-control" style="display: inline-block">
+                                <option disabled selected value> -- select an option -- </option>
+                                <option value="AD">ACE DIAMONDS</option>
+                                <option value="AC">ACE CLUBS</option>
+                                <option value="AH">ACE HEARTS</option>
+                                <option value="AS">ACE SPADES</option>
+
+                                <option value="2D">2 DIAMONDS</option>
+                                <option value="2C">2 CLUBS</option>
+                                <option value="2H">2 HEARTS</option>
+                                <option value="2S">2 SPADES</option>
+
+
+                                <option value="3D">3 DIAMONDS</option>
+                                <option value="3C">3 CLUBS</option>
+                                <option value="3H">3 HEARTS</option>
+                                <option value="3S">3 SPADES</option>
+
+
+                                <option value="4D">4 DIAMONDS</option>
+                                <option value="4C">4 CLUBS</option>
+                                <option value="4H">4 HEARTS</option>
+                                <option value="4S">4 SPADES</option>
+
+                                <option value="5D">5 DIAMONDS</option>
+                                <option value="5C">5 CLUBS</option>
+                                <option value="5H">5 HEARTS</option>
+                                <option value="5S">5 SPADES</option>
+
+                                <option value="6D">6 DIAMONDS</option>
+                                <option value="6C">6 CLUBS</option>
+                                <option value="6H">6 HEARTS</option>
+                                <option value="6S">6 SPADES</option>
+
+                                <option value="7D">7 DIAMONDS</option>
+                                <option value="7C">7 CLUBS</option>
+                                <option value="7H">7 HEARTS</option>
+                                <option value="7S">7 SPADES</option>
+
+                                <option value="8D">8 DIAMONDS</option>
+                                <option value="8C">8 CLUBS</option>
+                                <option value="8H">8 HEARTS</option>
+                                <option value="8S">8 SPADES</option>
+
+                                <option value="9D">9 DIAMONDS</option>
+                                <option value="9C">9 CLUBS</option>
+                                <option value="9H">9 HEARTS</option>
+                                <option value="9S">9 SPADES</option>
+
+                                <option value="0D">10 DIAMONDS</option>
+                                <option value="0C">10 CLUBS</option>
+                                <option value="0H">10 HEARTS</option>
+                                <option value="0S">10 SPADES</option>
+
+                                <option value="JD">JACK DIAMONDS</option>
+                                <option value="JC">JACK CLUBS</option>
+                                <option value="JH">JACK HEARTS</option>
+                                <option value="JS">JACK SPADES</option>
+
+                                <option value="QD">QUEEN DIAMONDS</option>
+                                <option value="QC">QUEEN CLUBS</option>
+                                <option value="QH">QUEEN HEARTS</option>
+                                <option value="QS">QUEEN SPADES</option>
+
+                                <option value="KD">KING DIAMONDS</option>
+                                <option value="KC">KING CLUBS</option>
+                                <option value="KH">KING HEARTS</option>
+                                <option value="KS">KING SPADES</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div>
+                    <ol class="list-text">
+                        <li>Your Score will equal to the number of remaining turns.</li>
+                        <li>Find Joker before turns run out</li>
+                        <li>Guess the replaced card for x2 points</li>
+                        <li>Lose everything if you get it wrong</li>
+                        <li><em>Good luck and have fun!</em></li>
+                    </ol>
+                </div>
+                <h2>Turns remaining: {{jokerTurnScore}}</h2>
+                <h2>{{message}}</h2>
+            </div>
+            <div class="col-8" style="top: 25px; margin-left: 30%;">
+                {{#each card_button_array}}
+                <div class="guessing-card-container" align="center" style="display: inline-block; width: 7%">
+                    <div class="guessing-card">
+                        <img src={{this.card}} alt="card" width="100%">
+                    </div>
+                    <form method="POST" action="/jflip/{{this.button_id}}">
+                        {{{this.button}}}
+                    </form>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+    {{> footer}}
+</body>
+<script>
+
+</script>
+
+</html>
