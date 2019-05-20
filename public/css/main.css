@@ -17,6 +17,22 @@ body {
     z-index: 1;
 }
 
+.dropdown-item {
+    color: black;
+    background: white;
+    -webkit-transition: background-color 1s ease-out;
+    -moz-transition: background-color 1s ease-out;
+    -o-transition: background-color 1s ease-out;
+    transition: background-color 1s ease-out;
+}
+
+.dropdown-item:hover {
+    color: black;
+    background: rgba(253, 130, 130, 0.596);
+    opacity: 80%;
+}
+
+
 /*------------------------------------------------------------Individual Page Classes------------------------------------------------------------*/
 .signin {
     background-image: url('/img/red_curtain.jpg');
@@ -73,13 +89,14 @@ form .input-group-text {
     background-color: #006b10;
     color: #dddddd;
 }
+
 /* cardbomb start */
 .cardbomb_game {
     background-image: url(https://images.unsplash.com/photo-1494178270175-e96de2971df9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=972&q=80);
-    color:whitesmoke;
+    color: whitesmoke;
     background-repeat: no-repeat;
     background-attachment: fixed;
-    background-position: center 0%; 
+    background-position: center 0%;
     background-color: black;
 }
 
@@ -93,8 +110,8 @@ form .input-group-text {
 }
 
 .pokerform {
-    max-width:7rem;
-    margin:auto;
+    max-width: 7rem;
+    margin: auto;
 }
 
 .pokerform:hover .pokerbtn {
@@ -110,8 +127,8 @@ form .input-group-text {
 }
 
 .scorepulse {
-    min-height:2rem; 
-    background: rgba(255, 255, 255, 0.7); 
+    min-height: 2rem;
+    background: rgba(255, 255, 255, 0.7);
     padding: 10px;
     border-radius: 5px;
     max-width: 400px;
