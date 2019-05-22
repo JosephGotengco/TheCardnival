@@ -290,3 +290,46 @@ meter[value="4"]::-moz-meter-bar {
 .closebtn:hover {
     color: black;
 }
+
+.rainbow-button {
+  width:calc(20vw + 6px);
+  height:calc(8vw + 6px);
+  background-image: linear-gradient(90deg, #00C0FF 0%, #FFCF00 49%, #FC4F4F 80%, #00C0FF 100%);
+  border-radius:5px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-transform:uppercase;
+  font-size:3vw;
+  font-weight:bold;
+}
+.rainbow-button:after {
+  content:attr(alt);
+  width:20vw;
+  height:8vw;
+  background-color:#191919;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.rainbow-button:hover {
+  animation:slidebg 2s linear infinite;
+}
+
+@-webkit-keyframes glow {
+    to {
+        border-color: yellow;
+        -webkit-box-shadow: 0 0 5px #69c800;
+        -moz-box-shadow: 0 0 5px #69c800;
+        box-shadow: 0 0 5px #69c800;
+    }
+}
+
+.myGlower {
+    background-color: #ccc;
+    border: 3px solid transparent;
+    -webkit-animation: glow 1.0s infinite alternate;
+    -webkit-transition: border 1.0s linear, box-shadow 1.0s linear;
+    -moz-transition: border 1.0s linear, box-shadow 1.0s linear;
+    transition: border 1.0s linear, box-shadow 1.0s linear;
+}

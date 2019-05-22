@@ -985,11 +985,9 @@ app.get('/match', async (request, response) => {
     try {
 
         match_card_objs = [];
-        for(i = 0; i < matchCardCount; i++){
-            match_card_objs.push({
-                card: cardback
-            });
-        }
+        match_card_objs.push({
+            card: `<img src=${cardback} alt="card" width="300%">`
+        });
 
         message = "";
         renderMatch(request, response, "", matchTurnScore, message, match_card_objs)
@@ -1007,11 +1005,12 @@ app.post('/newMatch', async (request, response) => {
         resetMatchVariables();
         matchDeck = await backend.getDeck(1);
         matchHand = await backend.drawDeck(matchDeck.deck_id, matchCardCount);
+
         for(i = 0; i < matchCardCount; i++){
             match_card_objs.push({
-                button: `<button class="btn btn-sm btn-light ${i + 1}" style="width: 90%; font-size: 14px" name="flip${i + 1}">Flip</button>\n`,
+                button: `<button class="btn btn-sm btn-light ${i + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${i + 1}">Flip</button>\n`,
                 button_id : i,
-                card: cardback
+                card: `<input type="image" src=${cardback} alt="Submit" width="100%" />`
             });
         }
 
@@ -1045,13 +1044,11 @@ app.post('/flip/:id', async (request, response) => {
 
             //Flip non-match cards back down
             if(getNumeric(match_cards[matchOne].value) != getNumeric(match_cards[matchTwo].value)){
-                match_card_objs[matchOne].button = `<button class="btn btn-sm btn-light ${matchOne + 1}" style="width: 90%; font-size: 14px" name="flip${matchOne + 1}">Flip</button>\n`
-                match_card_objs[matchOne].card = cardback
-                match_card_objs[matchTwo].button = `<button class="btn btn-sm btn-light ${matchTwo + 1}" style="width: 90%; font-size: 14px" name="flip${matchTwo + 1}">Flip</button>\n`
-                match_card_objs[matchTwo].card = cardback
+                match_card_objs[matchOne].card = `<input type="image" src=${cardback} alt="Submit" width="100%" />`
+                match_card_objs[matchTwo].card = `<input type="image" src=${cardback} alt="Submit" width="100%" />`
             }else{
-                match_card_objs[matchOne].button = `<button class="btn btn-sm btn-light ${matchOne + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchOne + 1}">Flip</button>\n`
-                match_card_objs[matchTwo].button = `<button class="btn btn-sm btn-light ${matchTwo + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchTwo + 1}">Flip</button>\n`
+                match_card_objs[matchOne].card = `<img src=${match_cards[matchOne].image} alt="card" width="100%">`
+                match_card_objs[matchTwo].card = `<img src=${match_cards[matchTwo].image} alt="card" width="100%">`
             }
 
             //Reset match values
@@ -1066,13 +1063,13 @@ app.post('/flip/:id', async (request, response) => {
         }else if(matchTwo == undefined){
             //No second card
             matchTwo = card_id;
-
-            if(getNumeric(match_cards[matchOne].value) == getNumeric(match_cards[matchTwo].value)){
-                matchedCount += 2;
-            }
         }
-        match_card_objs[card_id].button = `<button class="btn btn-sm btn-light ${card_id + 1}" style="width: 90%; font-size: 14px;border: red solid 2px;" disabled="true" name="flip${card_id + 1}">Flip</button>\n`
-        match_card_objs[card_id].card = match_cards[card_id].image
+        match_card_objs[card_id].card = `<input type="image" class="myGlower" src=${match_cards[card_id].image} alt="Submit" width="100%" style="b"/>`
+        if(matchTwo != undefined && getNumeric(match_cards[matchOne].value) == getNumeric(match_cards[matchTwo].value)){
+            matchedCount += 2;
+            match_card_objs[matchOne].card = `<img src=${match_cards[matchOne].image} alt="card" width="100%">`
+            match_card_objs[matchTwo].card = `<img src=${match_cards[matchTwo].image} alt="card" width="100%">`
+        }
 
         if (matchedCount == matchCardCount){
             message = await checkUserToSave('match', true, matchTurnScore);
@@ -1132,7 +1129,8 @@ function renderMatch(request, response, state, matchTurnScore, message, card_but
         nav_email: nav_email,
         balance: balance,
         music: music,
-        cardback: cardback
+        cardback: cardback,
+        matchedCount
     });
 }
 
@@ -1166,8 +1164,7 @@ async function checkUserToSave(game_name, won, score){
 */
 function disableMatchCards(){
     for(var i = 0; i < match_card_objs.length; i++){
-        match_card_objs[i].button = `<button class="btn btn-sm btn-light ${i + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${i + 1}">Flip</button>\n`
-        match_card_objs[i].card = match_cards[i].image
+        match_card_objs[i].card = `<img src=${match_cards[i].image} alt="card" width="100%">`
     }
 }
 

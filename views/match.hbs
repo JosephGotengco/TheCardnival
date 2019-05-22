@@ -25,15 +25,18 @@
                     </ol>
                 </div>
                 <h2>Turns remaining: {{matchTurnScore}}</h2>
-                <h2>{{message}}</h2>
+                <h2>Matches: {{matchedCount}} out of 52</h2>
+                <h2 style="color: red">{{message}}</h2>
             </div>
             <div class="col-8" style="top: 25px; margin-left: 30%;">
                 {{#each card_button_array}}
                 <div class="guessing-card-container" align="center" style="display: inline-block; width: 7%">
-                    <div class="guessing-card">
-                        <img src={{this.card}} alt="card" width="100%">
-                    </div>
+
                     <form method="POST" action="/flip/{{this.button_id}}">
+                        <div class="guessing-card">
+
+                            {{{this.card}}}
+                        </div>
                         {{{this.button}}}
                     </form>
                 </div>
