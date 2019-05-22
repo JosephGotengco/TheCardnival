@@ -12,7 +12,7 @@ const port = process.env.PORT || 8080;
 
 var app = express();
 
-
+//Temp
 var config = {
     apiKey: "AIzaSyDOvbL8GIvalFiVeUKmdEL5N7Dv6qzPk-w",
     authDomain: "bigorsmall-9c0b5.firebaseapp.com",
