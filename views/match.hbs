@@ -31,10 +31,8 @@
             <div class="col-8" style="top: 25px; margin-left: 30%;">
                 {{#each card_button_array}}
                 <div class="guessing-card-container" align="center" style="display: inline-block; width: 7%">
-
                     <form method="POST" action="/flip/{{this.button_id}}">
                         <div class="guessing-card">
-
                             {{{this.card}}}
                         </div>
                         {{{this.button}}}

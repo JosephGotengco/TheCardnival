@@ -316,6 +316,24 @@ meter[value="4"]::-moz-meter-bar {
   animation:slidebg 2s linear infinite;
 }
 
+.rainbow-button2 {
+  background-image: linear-gradient(90deg, #00C0FF 0%, #FFCF00 49%, #FC4F4F 100%);
+  position: relative;
+  padding: 3px;
+  display: inline-block;
+  border-radius: 7px;
+  span {
+    display: inline-block;
+    background: #191919;
+    color: white;
+    text-transform: uppercase;
+    padding: 2rem 5rem;
+    border-radius: 5px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-weight: 800;
+    font-size: 3rem;
+  }
+}
 @-webkit-keyframes glow {
     to {
         border-color: yellow;
@@ -333,3 +351,4 @@ meter[value="4"]::-moz-meter-bar {
     -moz-transition: border 1.0s linear, box-shadow 1.0s linear;
     transition: border 1.0s linear, box-shadow 1.0s linear;
 }
+

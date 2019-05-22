@@ -440,8 +440,6 @@ END - PROFILE(S)
 
 
 
-
-
 /*****************************************************************************
 
 START - BIG OR SMALL GAME
@@ -797,11 +795,11 @@ function renderCardbombGame(request, response, obj) {
         balance: balance,
         music: music,
         cardback: cardback,
-	login_msg: login_msg,
-	cardbombs_array: cardbombs_array_images,
-	cardbomb_raise: obj.state,
-	cardbomb_leavegame: obj.state,
-	null_cards: obj.null_cards
+    	login_msg: login_msg,
+    	cardbombs_array: cardbombs_array_images,
+    	cardbomb_raise: obj.state,
+    	cardbomb_leavegame: obj.state,
+    	null_cards: obj.null_cards
     });
 }
 
@@ -1192,6 +1190,7 @@ var jokerTurnScore = jokerCardCount;
 var card_param = []
 var joker = "/img/joker.jpg";
 var joker_replaced = 0;
+var jokercard = {"image": joker, "value": "JOKER"}
 
 /*
     REST GET - JOKER.HBS 
@@ -1206,11 +1205,11 @@ app.get('/joker', async (request, response) => {
 
         for(i = 0; i < jokerCardCount; i++){
             card_param.push({
-                card: cardback
+                card: `<img src=${cardback} alt="card" width="100%">`
             });
         }
 
-        renderJoker(request, response, "disabled", jokerTurnScore, "", card_param)
+        renderJoker(request, response, "disabled", jokerTurnScore, "", card_param, cardback)
     }
     catch (e){
         response.render('error.hbs',{
@@ -1231,7 +1230,6 @@ app.post('/newjoker', async (request, response) => {
         jokerDeck = await backend.getDeck(1);
         jokerHand = await backend.drawDeck(jokerDeck.deck_id, jokerCardCount);
         
-        var jokercard = {"image": joker, "value": "JOKER"}
 
         for(var i = 0; i < jokerHand.cards.length; i++){
             joker_cards.push(jokerHand.cards[i])
@@ -1243,13 +1241,13 @@ app.post('/newjoker', async (request, response) => {
 
         for (var i=0; i < joker_cards.length; i++){
             card_param.push({
-                button: `<button class="btn btn-sm btn-light ${i+1}" style="width: 90%; font-size: 14px" name="jflip${i+1}">Flip</button>\n`,
+                button: `<button class="btn btn-sm btn-light" style="width: 90%; font-size: 14px; visibility: hidden;" name="jflip">Flip</button>\n`,
                 button_id: i,
-                card: cardback
+                card: `<input type="image" src=${cardback} alt="Submit" width="100%" />`
             })
         }
 
-        renderJoker(request, response, "", jokerTurnScore, "", card_param)
+        renderJoker(request, response, "", jokerTurnScore, "", card_param, cardback)
 
     } catch (e) {
         response.render('error.hbs',{
@@ -1265,15 +1263,13 @@ app.post('/newjoker', async (request, response) => {
 app.post('/jflip/:id', async (request, response) => {
 
     var card_id = request.params.id;
-    card_param[card_id].card = joker_cards[card_id].image
-    card_param[card_id].button = `<button style="width: 90%; font-size: 14px; visibility: hidden;">jflip</button>\n`
-
+    card_param[card_id].card = `<img src=${joker_cards[card_id].image} alt="card" width="100%">`
     if (joker_cards[card_id].value == "JOKER") {
         //found joker
 
         message = await checkUserToSave('joker', true, jokerTurnScore);
         disableJokerCards();
-        renderJoker(request, response, "disabled", jokerTurnScore, message, card_param);
+        renderJoker(request, response, "disabled", jokerTurnScore, message, card_param, joker_replaced.image);
 
     } else {
         //didnt find joker
@@ -1284,12 +1280,12 @@ app.post('/jflip/:id', async (request, response) => {
 
             message = await checkUserToSave('joker', false, jokerTurnScore);
             disableJokerCards();
-            renderJoker(request, response, "disabled", jokerTurnScore, message, card_param);
+            renderJoker(request, response, "disabled", jokerTurnScore, message, card_param, joker_replaced.image);
         }
         else{
             //Keep playing, next turn
 
-            renderJoker(request, response, "", jokerTurnScore, "", card_param);
+            renderJoker(request, response, "", jokerTurnScore, "", card_param, cardback);
         }
     }
 });
@@ -1306,14 +1302,14 @@ app.post('/guessjoker', async (request, response) => {
 
         message = await checkUserToSave('joker', true, jokerTurnScore * 2);
         disableJokerCards();
-        renderJoker(request, response, "disabled", jokerTurnScore, message, card_param);
+        renderJoker(request, response, "disabled", jokerTurnScore, message, card_param, joker_replaced.image);
         console.log('You guessed right');
     }else{
         //wrong Guess
 
         message = await checkUserToSave('joker', false, 0);
         disableJokerCards();
-        renderJoker(request, response, "disabled", jokerTurnScore, message, card_param);
+        renderJoker(request, response, "disabled", jokerTurnScore, message, card_param, joker_replaced.image);
         console.log('You guessed wrong')
     }
 
@@ -1322,7 +1318,7 @@ app.post('/guessjoker', async (request, response) => {
 /*
     RENDER - Joker.hbs
 */
-function renderJoker(request, response, state, jokerTurnScore, message, card_button_array) {
+function renderJoker(request, response, state, jokerTurnScore, message, card_button_array, reveal) {
     response.render('joker.hbs', {
         title: 'Joker',
         state: state,
@@ -1330,6 +1326,7 @@ function renderJoker(request, response, state, jokerTurnScore, message, card_but
         jokerTurnScore: jokerTurnScore,
         message: message,
         card_button_array: card_button_array,
+        reveal: reveal
     });
 }
 
@@ -1339,7 +1336,7 @@ function renderJoker(request, response, state, jokerTurnScore, message, card_but
 function disableJokerCards(){
     for(var i = 0; i < card_param.length; i++){
         card_param[i].button = `<button style="width: 90%; font-size: 14px; visibility: hidden;">jflip</button>\n`
-        card_param[i].card = joker_cards[i].image
+        card_param[i].card = `<img src=${joker_cards[i].image} alt="card" width="100%">`
     }
 }
 
