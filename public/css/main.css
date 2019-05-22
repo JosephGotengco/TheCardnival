@@ -1,7 +1,5 @@
 /*------------------------------------------------------------Global Settings------------------------------------------------------------*/
-div {
-    /*border: red solid 2px;*/
-}
+/* div { border: red solid 2px;} */
 
 html,
 body {
@@ -18,6 +16,22 @@ body {
     width: 100%;
     z-index: 1;
 }
+
+.dropdown-item {
+    color: black;
+    background: white;
+    -webkit-transition: background-color 1s ease-out;
+    -moz-transition: background-color 1s ease-out;
+    -o-transition: background-color 1s ease-out;
+    transition: background-color 1s ease-out;
+}
+
+.dropdown-item:hover {
+    color: black;
+    background: rgba(253, 130, 130, 0.596);
+    opacity: 80%;
+}
+
 
 /*------------------------------------------------------------Individual Page Classes------------------------------------------------------------*/
 .signin {
@@ -76,11 +90,52 @@ form .input-group-text {
     color: #dddddd;
 }
 
+/* cardbomb start */
 .cardbomb_game {
     background-image: url(https://images.unsplash.com/photo-1494178270175-e96de2971df9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=972&q=80);
     color: whitesmoke;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center 0%;
+    background-color: black;
 }
 
+.pokerbtn {
+    width: 7rem;
+    height: 5rem;
+    background-color: white;
+    color: red;
+    font-weight: bold;
+    border-radius: 0.5rem;
+}
+
+.pokerform {
+    max-width: 7rem;
+    margin: auto;
+}
+
+.pokerform:hover .pokerbtn {
+    border: solid black 1px;
+    color: darkred;
+    box-shadow: 0 0.5em 1em -0.4em grey;
+    transform: translateY(-0.1em);
+    color: black;
+}
+
+.cardbomb_game .bombs {
+    width: 45%;
+}
+
+.scorepulse {
+    min-height: 2rem;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 400px;
+    /* min-width: 1; */
+}
+
+/* cardbomb end */
 .game_screen {
     margin-top: 56px;
     padding-top: 2rem;

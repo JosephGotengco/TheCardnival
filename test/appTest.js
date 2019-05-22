@@ -8,6 +8,7 @@ const request = require('supertest');
 chai.use(chaiHttp);
 const app = require('../app.js');
 const backend = require('../backend')
+
 function wait(ms){
     var start = new Date().getTime();
     var end = start;
@@ -92,9 +93,10 @@ describe("Deck tests", () => {
 	});
 });
 
+var login = null;
+var uid = null;
+
 describe("Store tests", async () => {
-	var login = null;
-	var uid = null;
 
 	it("Test buying item with zero balance... should fail", async () => {
 		login = await backend.loginAccount(dummy_accounts.chris.email, dummy_accounts.chris.password, null, null);
@@ -127,6 +129,62 @@ describe("Store tests", async () => {
 
 	it("Testing using the newly purchased item", async () => {
 		assert(await backend.changeProfile(uid, 'thanos', "https://firebasestorage.googleapis.com/v0/b/bigorsmall-9c0b5.appspot.com/o/thanos.jpg?alt=media&token=d3ff7293-0ea9-4bae-805e-a7c59c7210ae", "profile_pictures"), "Successfully changed profile_pictures");
-		await backend.deleteAccount();
 	});	
+});
+
+describe("Cardbomb playing as guest", async () => {
+
+	it("Testing saving 10 cardbomb points win", async () => {
+		assert((await app.checkUserToSave("cardbomb", true, 10)), "Win 10 pts, Guests cannot be part of the rankings.");
+	});
+
+	it("Testing saving 10 cardbomb points lose", async () => {
+		assert((await app.checkUserToSave("cardbomb", false, 10)), "Lose 10 pts, Guests cannot be part of the rankings.");		
+	});
+
+	it("Testing saving 10 match points win", async () => {
+		assert((await app.checkUserToSave('match', true, 10)), "Win 10 pts, Guests cannot be part of the rankings.");		
+	});
+
+	it("Testing saving 10 match points lose", async () => {
+		assert((await app.checkUserToSave('match', false, 10)), "Lose 10 pts, Guests cannot be part of the rankings.");
+	});
+
+	it("Testing saving 20 joker points win", async () => {
+		assert((await app.checkUserToSave('joker', true, 20)), "Win 10 pts, Guests cannot be part of the rankings.");		
+	});
+
+	it("Testing saving 20 joker points lose", async () => {
+		assert((await app.checkUserToSave('joker', true, 20)), "Lose 10 pts, Guests cannot be part of the rankings.");	
+	});
+
+});
+
+describe("Cardbomb playing as logged in user", async () => {
+
+	it("Testing saving 10 cardbomb points win", async () => {
+		assert((await app.checkUserToSave("cardbomb", true, 10)), "Win 10 pts, Guests cannot be part of the rankings.");
+	});
+
+	it("Testing saving 10 cardbomb points lose", async () => {
+		assert((await app.checkUserToSave("cardbomb", false, 10)), "Lose 10 pts, Guests cannot be part of the rankings.");		
+	});
+
+	it("Testing saving 10 match points win", async () => {
+		assert((await app.checkUserToSave('match', true, 10)), "Win 10 pts, Guests cannot be part of the rankings.");		
+	});
+
+	it("Testing saving 10 match points lose", async () => {
+		assert((await app.checkUserToSave('match', false, 10)), "Lose 10 pts, Guests cannot be part of the rankings.");
+	});
+
+	it("Testing saving 20 joker points win", async () => {
+		assert((await app.checkUserToSave('joker', true, 20)), "Win 10 pts, Guests cannot be part of the rankings.");		
+	});
+
+	it("Testing saving 20 joker points lose", async () => {
+		assert((await app.checkUserToSave('joker', true, 20)), "Lose 10 pts, Guests cannot be part of the rankings.");
+		await backend.deleteAccount();		
+	});
+
 });

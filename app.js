@@ -3,6 +3,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const backend = require('./backend');
 const firebase = require('firebase');
+const session = require('express-session');
+const cookieParser = require('cookie-parser');
+const passport = require('passport');
+
 const path = require('path');
 const port = process.env.PORT || 8080;
 
@@ -32,6 +36,23 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
 }));
+
+app.use(cookieParser());
+
+app.use(
+    session({
+        secret: "secretcode",
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            maxAge: 24 * 60 * 60 * 1000,
+            sameSite: true
+        }
+    })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 var deck = 0;
 var card = 0;
@@ -648,49 +669,49 @@ START - CARDBOMB GAME
  ******************************************************************************/
 
 var cardbomb_game = null;
-
-async function cardbombNewgame(request, response){
-    score = 0;
-
-    try {
-	if (current_user == undefined) {
-		response.render('login.hbs', {
-        		title: 'Big or Small | Login',
-        		nav_email: nav_email,
-       			balance: balance
-    		})
-		return;
-	}
-	deck = await backend.getDeck(1);
-    deck = await backend.shuffleDeck(deck.deck_id);
-	card = await backend.drawDeck(deck.deck_id, 1);
-	cardbomb_game = true;
-        renderCardbombGame(request, response, "", card.cards[0].image, cardback, 52, "");
-    } catch (e) {
-        response.render('error.hbs',{
-            error: e
-        })
-        console.log(e)
-    }
+var cardbombs_array = [];
+var cardbombs_array_images = [];
+ 
+const cardbomb_obj = {
+	state: "",
+	main_card: null,
+	deck_top: cardback,
+	remaining: null,
+	game_state: "",
 }
 
-app.get('/cardbomb', cardbombNewgame);
+
+app.get('/cardbomb', cardbomb);
+
+app.get('/cardbomb_newgame', cardbombNewgame);
 
 app.post('/cardbomb_raise', async (request, response) => {
+	
+    if (cardbomb_game == null) {
+   	 cardbomb(request, response);
+	 return;
+    }
+
     try {
+	    /*
         if (card == 0) {
             card = await backend.drawDeck(deck.deck_id, 1);
             cardbombRaise(request, response);
             return;
         } else {
-            if (getNumeric(card.cards[0].code) != 4) {
+	*/
+	card = await backend.drawDeck(deck.deck_id, 1);
+
+	console.log('checking for' + card.cards[0].code);
+
+            if (cardbombs_array.indexOf(card.cards[0].code) < 0) {
                 console.log('win')
                 cardbombRaise(request, response);
             } else {
                 console.log('lose')
                 cardbombBoom(request, response);
             }
-        }
+	    //include adwlkerj;l
     } catch (e) {
         response.render('error.hbs',{
             error: e
@@ -700,6 +721,12 @@ app.post('/cardbomb_raise', async (request, response) => {
 });
 
 app.post('/cardbomb_leavegame', async (request, response) => {
+
+    if (cardbomb_game == null) {
+   	 cardbomb(request, response);
+	 return;
+    }
+
     try {
         cardbombLeave(request, response);
     } catch (e) {
@@ -710,28 +737,136 @@ app.post('/cardbomb_leavegame', async (request, response) => {
     }
 });
 
-function renderCardbombGame(request, response, state, main_card, deck_top, remaining, game_state) {
-    var name = "Guest";
-    if (current_user !== undefined) {
-        name = `${current_user.fname} ${current_user.lname}`;
+async function cardbomb(request, response){
+    try {
+	let obj = cardbomb_obj;
+	    obj.game_state = "Cick 'New Game' to start a new game of cardbomb!";
+	    obj.main_card = cardback;
+	    obj.state = "disabled";
+	    obj.remaining = "";
+	    obj.null_cards = false;
+
+        renderCardbombGame(request, response, obj);
+    } catch (e) {
+        response.render('error.hbs',{
+            error: e
+        })
+        console.log(e)
     }
+}
+
+function renderCardbombGame(request, response, obj) {
+    /*
+     * obj = {
+     * 		state: disabled/"",
+     * 		main_card: ,
+     * 		deck_top: ,
+     * 		remaining: ,
+     * 		game_state: 
+     * }
+     */
+    var name = "Guest";
+    var login_msg = "";
+    if (current_user !== undefined) {
+        name = `${current_user.fname} ${current_user.lname}`;	
+    } else {
+    	login_msg = "please log in to save your scores";
+    }
+
+	//console.log(cardbomb_game);
+	//console.log(cardbombs_array_images);
+	//console.log(obj.game_state);
+
+    if (cardbomb_game == null) {
+   	cardbombs_array_images = []; 
+    }
+
+    if (!obj.hasOwnProperty('null_cards')) {
+   	obj.null_cards = true; 
+    }
+
     response.render('cardbomb.hbs', {
         title: 'Cardbomb | Play Game',
-        card: main_card,
-        deck_top: deck_top,
+        card: obj.main_card,
+        deck_top: obj.deck_top,
         score: score,
-        remaining: remaining,
+        remaining: obj.remaining,
         name: name,
-        game_state: game_state,
+        game_state: obj.game_state,
         nav_email: nav_email,
         balance: balance,
         music: music,
-        cardback: cardback
+        cardback: cardback,
+	login_msg: login_msg,
+	cardbombs_array: cardbombs_array_images,
+	cardbomb_raise: obj.state,
+	cardbomb_leavegame: obj.state,
+	null_cards: obj.null_cards
     });
+}
+
+async function randomizeBombs () {
+	let tdeck = await backend.getDeck(1),
+	    tcard,
+	    tarray = [];
+
+	cardbombs_array = [];
+	cardbombs_array_images = [];
+
+	for (var i = 0; i < 4; i++) {
+		tcard = await backend.drawDeck(tdeck.deck_id, 1);
+
+		cardbombs_array.push(tcard.cards[0].code);
+
+		codes = ['H', 'D', 'S', 'C'];
+		for (var j = 0; j < 4; j++) {
+			let code = tcard.cards[0].code.charAt(0) + codes[j];
+			cardbombs_array.push(code);
+		}
+
+		cardbombs_array_images.push(tcard.cards[0].image);
+	}
+
+	console.log(cardbombs_array);
+	console.log(cardbombs_array_images);
+}
+
+async function cardbombNewgame(request, response){
+    score = 0;
+
+    try {
+	await randomizeBombs();
+
+	// shuffle a new deck and draw a new card but 
+	// make sure the first card is not already selected as a bomb.
+	do {
+		deck = await backend.getDeck(1);
+		deck = await backend.shuffleDeck(deck.deck_id);
+		card = await backend.drawDeck(deck.deck_id, 1);	
+	} while (cardbombs_array.indexOf(card.cards[0].code) >= 0);
+
+	cardbomb_game = true;
+
+	let obj = cardbomb_obj;
+	    obj.game_state = "Starting a new game. Good luck!";
+	    obj.main_card = card.cards[0].image;
+	    obj.remaining = 51;
+	    obj.state = "";
+	    obj.null_cards = true;
+
+        renderCardbombGame(request, response, obj);
+    } catch (e) {
+        response.render('error.hbs',{
+            error: e
+        })
+        console.log(e)
+    }
 }
 
 async function cardbombRaise(request, response) {
     var add = 0;
+
+	console.log(request.body);
 
     //pick one of 5 different score multipliers based on the total number of cards drawn
     for (var n = 1; n < 6; n++){
@@ -740,44 +875,85 @@ async function cardbombRaise(request, response) {
             score += add;
             break;
         }
-    }
-    
-    card = await backend.drawDeck(deck.deck_id, 1);
+    } 
 
+    let obj = cardbomb_obj;
+	obj.main_card = card.cards[0].image;
+	obj.remaining = card.remaining;
+	
     if (card.remaining > 0) {
-        renderCardbombGame(request, response, "", card.cards[0].image, cardback, card.remaining, `Raising ${add}!`);
+	obj.game_state = `Raising ${add}!`;
+
+        renderCardbombGame(request, response, obj);
     } else {
         var win_message = `Congratulations, you have finished the deck with ${score} points`;
         if (current_user !== undefined) {
 
-            win_message = await backend.saveHighScore(current_user.uid, current_user.email, score, true, 'cardbomb');
+            win_message += await checkUserToSave('cardbomb', true, score);
             balance += score;
         }
-        renderCardbombGame(request, response, "", card.cards[0].image, cardback, card.remaining, win_message)
+	obj.game_state = win_message;
+        renderCardbombGame(request, response, obj);
 	cardbomb_game = null;
     }
 }
 
+async function nCardsBeforeNextBomb () {
+	let n = 0;
+
+	while (card.remaining > 0) {
+		let next_card = await backend.drawDeck(deck.deck_id, 1);
+		
+		if ( cardbombs_array.indexOf(next_card.cards[0].code) < 0 ) {
+			n++;
+		} else {
+			break;	
+		}
+	}
+
+	return n;
+}
+
 async function cardbombBoom(request, response) {
-    var lose_message = `BOOM! you lost the game`;
+    var lose_message = `BOOM! that was a CARDBOMB! `;
+
     if (current_user !== undefined) {
 
-        lose_message = await backend.saveHighScore(current_user.uid, current_user.email, score, false, 'cardbomb');
+        lose_message += await checkUserToSave('cardbomb', false, 0);
     }
+
+    let obj = cardbomb_obj;
+	obj.state = "disabled";
+	obj.main_card = card.cards[0].image;
+	obj.remaining = card.remaining;
+	obj.game_state = lose_message;
+
+    renderCardbombGame(request, response, obj); 
     score = 0;
-    renderCardbombGame(request, response, "disabled", card.cards[0].image, cardback, card.remaining, lose_message); 
     cardbomb_game = null;
 }
 
 async function cardbombLeave(request, response) {
-    message = `You have decided to leave with your winnings. Congratulations you have won ${score} points!`;
+    let n = await nCardsBeforeNextBomb();
+    let tscore = score;
+    score = score - (5 * n);
+
+    let message = `You have decided to leave with your winnings. ${n} cards remaining before next bomb. Your final score is ${tscore} - (${n} * 5) => ${score}.`;
+
     if (current_user !== undefined) {
 
-        message = await backend.saveHighScore(current_user.uid, current_user.email, score, false, 'cardbomb');
+        await checkUserToSave('cardbomb', true, score);
         balance += score;
     }
+
+    let obj = cardbomb_obj;
+	obj.state = "disabled";
+	obj.main_card = card.cards[0].image;
+	obj.remaining = card.remaining;
+	obj.game_state = message;
+
+    renderCardbombGame(request, response, obj);
     score = 0;
-    renderCardbombGame(request, response, "disabled", card.cards[0].image, cardback, card.remaining, message);
     cardbomb_game = null;
 }
 
@@ -1126,4 +1302,6 @@ END- JOKER GAME
 
 ******************************************************************************/
 
-module.exports = app;
+module.exports = {
+	checkUserToSave
+};
