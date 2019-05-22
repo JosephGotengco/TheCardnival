@@ -13,11 +13,11 @@ The Cardnival is card game themed web application using Handlebar Templates, Nod
 Major features include:
 
 <ul>
-<li>Variety of card games(Big or Small, Matching Cards, CardBomb, Joker) </li>
-<li>Keep track of your game stats with a user account</li>
+<li>Card Games(Big or Small, Matching Cards, CardBomb, Joker) </li>
+<li>User account Stat-Tracking</li>
 <li>Global game rankings</li>
-<li>Browse other player's personally customized profiles</li>
-<li>Earn Pickle Tokens as you continue playing the games</li>
+<li>Browse other players' personally customized profiles</li>
+<li>Earn Pickle Tokens by playing Cardnival Games</li>
 <li>Purchase items with Pickle Tokens from our store(Profile picture, music, cardbacks)</li>
 <li>Customize your profile with items bought from the store</li>
 </ul>
