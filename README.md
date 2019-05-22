@@ -25,7 +25,7 @@ Major features include:
 
 ### Install
 
-This application requires Node.js and you download all dependencies inside package.json file. 
+This application requires Node.js and you need to download all dependencies inside package.json file. 
 From inside the application's directory, run the following in terminal:
 ```
 npm install
