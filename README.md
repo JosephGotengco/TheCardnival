@@ -3,11 +3,14 @@
 [![TheCardnival](https://firebasestorage.googleapis.com/v0/b/bigorsmall-9c0b5.appspot.com/o/TheCardnival.png?alt=media&token=fdde8240-6b78-4bab-b070-d81f77518b80)](https://pickle-cardnival.herokuapp.com "TheCardnival")
 
 Demo Heroku Link: https://pickle-cardnival.herokuapp.com
+
 Note: It may take a few seconds to redeploy application on heroku.
 
 
 ## Centralized Card Game Hub
-The Cardnival is card game themed web application. This application provides a number of different features that provide enjoyment for users and an incentive to continue playing to earn prizes.
+The Cardnival is card game themed web application using Handlebar Templates, Node.js, Firebase and credits to @crobertsbmw(https://github.com/crobertsbmw/) for DeckOfCards API(https://github.com/crobertsbmw/deckofcards).
+
+Major features include:
 
 <ul>
 <li>Variety of card games(Big or Small, Matching Cards, CardBomb, Joker) </li>
