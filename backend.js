@@ -88,7 +88,7 @@ var deleteAccount = async () => {
     a high score results message depending on situation.
  */
 async function saveHighScore(userId, email, score, won, game_name) {
-    var score_message = `Sorry, you have lost with ${score}`;
+    var score_message = `Finished with ${score} pts`;
     var test = {}
 
     if (userId === undefined) {
@@ -155,7 +155,7 @@ async function highScoreString(high_scores){
     var output_rankings = "";
     high_scores.forEach(function (item, index, array) {
         output_rankings += `${index + 1}. ${item[0]} | ${item[1]} Points 
-                            <a href="/profile/${item[2]}">Profile</a> <br>`
+                            <a href="/profile/${item[2]}" class="rainbow-button2"><span>Profile</span></a> <br>`
     });
     if (output_rankings.length === 0) {
         output_rankings = "No Rankings currently \n"
@@ -496,5 +496,7 @@ module.exports = {
     deleteAccount,
     changeProfile,
     drawCardWithCode,
-    createBombsPile
+    createBombsPile,
+    highScoreString
+
 };

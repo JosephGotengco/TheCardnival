@@ -5,7 +5,7 @@
 
 <body class="game_body">
     {{> header}}
-    <br><br>
+    <br>
     <div id='custom-jumbo' class="jumbotron container-fluid">
         <div class="row">
             <div class="col-lg-3" align="center"
@@ -16,24 +16,34 @@
                     <button class="btn btn-dark" style="display: block;" type="submit">New Game</button>
                 </form>
                 <br>
-                <div>
-                    <ol class="list-text" style="">
-                        <li>Match all cards to win the game</li>
-                        <li>Score based on turns remaining</li>
-                        <li>Once your turns reaches 0, the game is over.</li>
-                        <li><em>Good luck and have fun!</em></li>
-                    </ol>
-                </div>
+                {{#if null_cards}}
+
+                    <h4 class="game_style" style="top:-10rem;">Bombs</h2>
+                    {{#each cardbombs_array}}
+
+                    <img src={{this}} class="gamecard bombs m-1" alt="bomb">
+                            {{/each}}
+
+                    {{else}}
+                    <div class="container game_body mt-3 py-4" style="border-radius: 2rem; border: solid white 1px; min-width: 150px;">
+                        <h3>Instructions</h3>
+                        <p>Match all cards to win the game</p>
+                        <p>Score based on turns remaining</p>
+                        <p>Once your turns reaches 0, the game is over.</p>
+                        <p>Good luck and have fun!</p>
+                    </div>
+                {{/if}}
                 <h2>Turns remaining: {{matchTurnScore}}</h2>
-                <h2>{{message}}</h2>
+                <h2>Matches: {{matchedCount}} out of 52</h2>
+                <h2 style="color: red">{{message}}</h2>
             </div>
             <div class="col-8" style="top: 25px; margin-left: 30%;">
                 {{#each card_button_array}}
                 <div class="guessing-card-container" align="center" style="display: inline-block; width: 7%">
-                    <div class="guessing-card">
-                        <img src={{this.card}} alt="card" width="100%">
-                    </div>
                     <form method="POST" action="/flip/{{this.button_id}}">
+                        <div class="guessing-card">
+                            {{{this.card}}}
+                        </div>
                         {{{this.button}}}
                     </form>
                 </div>
