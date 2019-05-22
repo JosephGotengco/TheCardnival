@@ -155,7 +155,7 @@ async function highScoreString(high_scores){
     var output_rankings = "";
     high_scores.forEach(function (item, index, array) {
         output_rankings += `${index + 1}. ${item[0]} | ${item[1]} Points 
-                            <a href="/profile/${item[2]}" class="rainbow-button2"><span>Profile</span></a> <br>`
+                            <a href="/profile/${item[2]}"><span>Profile</span></a> <br>`
     });
     if (output_rankings.length === 0) {
         output_rankings = "No Rankings currently \n"
