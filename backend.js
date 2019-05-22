@@ -88,7 +88,7 @@ var deleteAccount = async () => {
     a high score results message depending on situation.
  */
 async function saveHighScore(userId, email, score, won, game_name) {
-    var score_message = `Sorry, you have lost with ${score}`;
+    var score_message = `Finished with ${score} pts`;
     var test = {}
 
     if (userId === undefined) {

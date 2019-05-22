@@ -4,18 +4,12 @@
 
 <body class="game_body">
     {{> header}}
-    <br><br>
+    <br>
     <div id='custom-jumbo' class="jumbotron container-fluid">
         <div class="container game_screen mt-5 mb-1" id="content">
             <div class="row">
                 <div class="col">
                     <h4 class="game_style">Hello {{name}}</h1>
-                </div>
-                <div class="col-6">
-                    <h1 class="game_style">Score: {{score}} Points</h4>
-                </div>
-                <div class="col">
-                    <h4 class="game_style">Remaining Cards: {{remaining}}</h4>
                 </div>
             </div>
             <div class="row my-1 ">
@@ -23,13 +17,11 @@
                     <div class="big_small_responsive">
                         <img src={{card}} class="gamecard" alt="YourCard" class='playcard'>
                     </div>
-                    <h4 style="color: red;">{{{game_state}}}</h4>
                 </div>
                 <div class="col-lg-6 col-md mx-auto order-lg-2 order-md-12 order-xs-3">
                     <div class="big_small_responsive ">
                         <div class="container mt-2 pt-2">
                             <div class="row my-1">
-
                                 <form class="container" id="form1" method="POST" action="/newgame">
                                     <button class="btn btn-dark btn-lg game_style" type="submit" value="New Game">New
                                         Game</button>
@@ -57,15 +49,16 @@
                             </div>
                             <div class="row my-2">
                                 <div class="col">
-                                    <form class="container" id="form1" method="GET" action="/rankings">
-                                        <button class="btn btn-dark game_style" type="submit">Rankings</button>
-                                    </form>
+                                    <h4 class="game_style">Score: {{score}} Points</h4>
                                 </div>
                                 <div class="col">
                                     <form class="container" id="form1" method="POST" action="/signout">
-                                        <button class="btn btn-dark game_style" type="submit">Sign Out</button>
+                                        <h4 class="game_style">Remaining Cards: {{remaining}}</h4>
                                     </form>
                                 </div>
+                            </div>
+                            <div class="row my-2">
+                                    <h4 style="">{{{game_state}}}</h4>
                             </div>
                         </div>
                     </div>
@@ -77,18 +70,26 @@
                 </div>
             </div>
             {{!-- <br> --}}
-            <div class="row">
-                <div class="col">
-                    <ol class="list-text" style="text-align: center">
-                        <li>Is the next card <em>bigger</em> or <em>smaller</em> than your current card?</li>
-                        <li>You can gamble on a <em>tie</em> for four times the payout</li>
-                        <li>Don't worry about the suits</li>
-                        <li>If you're right, then that card will be your new card.</li>
-                        <li><em>Have fun and try to get the highest score you can!</em></li>
-                    </ol>
-                </div>
-            </div>
+
+            
         </div>
+        {{#if null_cards}}
+
+                    <h4 class="game_style" style="top:-10rem;">Bombs</h2>
+                    {{#each cardbombs_array}}
+
+                    <img src={{this}} class="gamecard bombs m-1" alt="bomb">
+                            {{/each}}
+
+                    {{else}}
+                    <div class="container game_body mt-3 py-4" style="border-radius: 2rem; border: solid white 1px; min-width: 150px; text-align: center;">
+                        <h3>Is the next card <em>bigger</em> or <em>smaller</em> than your current card?</h3>
+                        <p>You can gamble on a <em>tie</em> for four times the payout</p>
+                        <p>Don't worry about the suits</p>
+                        <p>If you're right, then that card will be your new card.</p>
+                        <p>Have fun and try to get the highest score you can!</p>
+                    </div>
+                {{/if}}
     </div>
     {{> footer}}
 </body>

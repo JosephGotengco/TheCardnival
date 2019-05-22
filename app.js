@@ -582,28 +582,30 @@ function getNumeric(card) {
     }
 }
 
+var lastCard = ""
 async function bigOrSmallCorrect(weight, request, response) {
     score += weight;
+    var lastCard = `Last Card: <img src=${card.cards[0].image} width="25%">`;
     card = card2;
     card2 = await backend.drawDeck(deck.deck_id, 1);
     if (card2.remaining > 0) {
-        renderBigOrSmall(request, response, "", card.cards[0].image, cardback, card.remaining, `Correct Guess!`);
+        renderBigOrSmall(request, response, "", card.cards[0].image, cardback, card.remaining, `${lastCard}`);
     } else {
-        var win_message = `Congratulations, you have finished the deck with ${score} point`;
-        if (current_user !== undefined) {
-            await backend.saveHighScore(current_user.uid, current_user.email, score, true, 'big_or_small');
-            balance += score;
-        }
+        var win_message = await checkUserToSave('big_or_small', true, score);
+        // if (current_user !== undefined) {
+        //     await backend.saveHighScore(current_user.uid, current_user.email, score, true, 'big_or_small');
+        //     balance += score;
+        // }
         renderBigOrSmall(request, response, "", card.cards[0].image, cardback, card.remaining, win_message)
     }
 }
 
 async function bigOrSmallWrong(request, response) {
-    var lose_message = `Sorry, you have lost with ${score} points`;
-    if (current_user !== undefined) {
-        lose_message = await backend.saveHighScore(current_user.uid, current_user.email, score, false, 'big_or_small');
-        balance += score;
-    }
+    var lose_message = await checkUserToSave('big_or_small', false, score);
+    // if (current_user !== undefined) {
+    //     lose_message = await backend.saveHighScore(current_user.uid, current_user.email, score, false, 'big_or_small');
+    //     balance += score;
+    // }
     renderBigOrSmall(request, response, "disabled", card.cards[0].image, card2.cards[0].image, card.remaining,
         lose_message);
     score = 0;
@@ -737,7 +739,8 @@ app.post('/cardbomb_leavegame', async (request, response) => {
 
 async function cardbomb(request, response){
     try {
-	let obj = cardbomb_obj;
+        cardbomb = 0;
+	    let obj = cardbomb_obj;
 	    obj.game_state = "Cick 'New Game' to start a new game of cardbomb!";
 	    obj.main_card = cardback;
 	    obj.state = "disabled";
@@ -754,15 +757,7 @@ async function cardbomb(request, response){
 }
 
 function renderCardbombGame(request, response, obj) {
-    /*
-     * obj = {
-     * 		state: disabled/"",
-     * 		main_card: ,
-     * 		deck_top: ,
-     * 		remaining: ,
-     * 		game_state: 
-     * }
-     */
+
     var name = "Guest";
     var login_msg = "";
     if (current_user !== undefined) {
@@ -770,10 +765,6 @@ function renderCardbombGame(request, response, obj) {
     } else {
     	login_msg = "please log in to save your scores";
     }
-
-	//console.log(cardbomb_game);
-	//console.log(cardbombs_array_images);
-	//console.log(obj.game_state);
 
     if (cardbomb_game == null) {
    	cardbombs_array_images = []; 
@@ -802,6 +793,7 @@ function renderCardbombGame(request, response, obj) {
     	null_cards: obj.null_cards
     });
 }
+
 
 async function randomizeBombs () {
 	let tdeck = await backend.getDeck(1),
@@ -968,6 +960,7 @@ START - MATCH GAME
 
 ******************************************************************************/
 
+//Match Game Variables
 var matchDeck = 0;
 var matchHand = 0;
 var match_cards = [];
@@ -978,7 +971,9 @@ var matchCardCount = 52;
 var matchedCount = 0;
 var matchTurnScore = matchCardCount * 3;
 
-
+/*
+    REST GET - GAME MATCH.HBS, Fresh Layout before game starts
+*/
 app.get('/match', async (request, response) => {
     try {
 
@@ -998,6 +993,9 @@ app.get('/match', async (request, response) => {
     }
 });
 
+/*
+    REST POST - GAME MATCH.HBS, start game and initialize all cards
+*/
 app.post('/newMatch', async (request, response) => {
     try {
         resetMatchVariables();
@@ -1038,6 +1036,7 @@ app.post('/flip/:id', async (request, response) => {
         var card_id = request.params.id;
         matchTurnScore--;
 
+        //currently no matched cards
         if(matchOne != undefined && matchTwo != undefined){
 
             //Flip non-match cards back down
@@ -1045,6 +1044,7 @@ app.post('/flip/:id', async (request, response) => {
                 match_card_objs[matchOne].card = `<input type="image" src=${cardback} alt="Submit" width="100%" />`
                 match_card_objs[matchTwo].card = `<input type="image" src=${cardback} alt="Submit" width="100%" />`
             }else{
+                //keep matched cards flipped up but disabled flip functionality
                 match_card_objs[matchOne].card = `<img src=${match_cards[matchOne].image} alt="card" width="100%">`
                 match_card_objs[matchTwo].card = `<img src=${match_cards[matchTwo].image} alt="card" width="100%">`
             }
@@ -1062,7 +1062,11 @@ app.post('/flip/:id', async (request, response) => {
             //No second card
             matchTwo = card_id;
         }
+
+        //Current clicked card glows
         match_card_objs[card_id].card = `<input type="image" class="myGlower" src=${match_cards[card_id].image} alt="Submit" width="100%" style="b"/>`
+        
+        //Check if you match after new click, get points
         if(matchTwo != undefined && getNumeric(match_cards[matchOne].value) == getNumeric(match_cards[matchTwo].value)){
             matchedCount += 2;
             match_card_objs[matchOne].card = `<img src=${match_cards[matchOne].image} alt="card" width="100%">`
@@ -1070,16 +1074,18 @@ app.post('/flip/:id', async (request, response) => {
         }
 
         if (matchedCount == matchCardCount){
+            //win
             message = await checkUserToSave('match', true, matchTurnScore);
             disableMatchCards();
             renderMatch(request, response, "disabled", matchTurnScore, message, match_card_objs)
 
         }else if (matchTurnScore == 0) {
+            //lose
             message = await checkUserToSave('match', false, matchTurnScore);
             disableMatchCards();
             renderMatch(request, response, "disabled", matchTurnScore, message, match_card_objs)
         } else {
-
+            //keep playing
             renderMatch(request, response, "", matchTurnScore, message, match_card_objs)
         }
 
@@ -1151,6 +1157,7 @@ async function checkUserToSave(game_name, won, score){
     message = ""
     if(current_user != undefined){
         message = await backend.saveHighScore(current_user.uid, current_user.email, score, false, game_name);
+        balance += score;
     }else{
         message = await backend.saveHighScore(undefined, undefined, score, won, game_name);
     }
@@ -1202,7 +1209,6 @@ app.get('/joker', async (request, response) => {
         joker_cards = [];
 
         //Initialize joker.hbs cards with player cardback
-
         for(i = 0; i < jokerCardCount; i++){
             card_param.push({
                 card: `<img src=${cardback} alt="card" width="100%">`
@@ -1326,7 +1332,9 @@ function renderJoker(request, response, state, jokerTurnScore, message, card_but
         jokerTurnScore: jokerTurnScore,
         message: message,
         card_button_array: card_button_array,
-        reveal: reveal
+        reveal: reveal,
+        nav_email: nav_email,
+        balance: balance,
     });
 }
 
