@@ -15,7 +15,7 @@ Major features include:
 <ul>
 <li>Variety of card games(Big or Small, Matching Cards, CardBomb, Joker) </li>
 <li>Keep track of your game stats with a user account</li>
-<li>View Global ranking for all the games</li>
+<li>Global game rankings</li>
 <li>Browse other player's personally customized profiles</li>
 <li>Earn Pickle Tokens as you continue playing the games</li>
 <li>Purchase items with Pickle Tokens from our store(Profile picture, music, cardbacks)</li>
