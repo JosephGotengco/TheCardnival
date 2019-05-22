@@ -1004,7 +1004,7 @@ app.get('/match', async (request, response) => {
 
 app.post('/newMatch', async (request, response) => {
     try {
-        resetVariables();
+        resetMatchVariables();
         matchDeck = await backend.getDeck(1);
         matchHand = await backend.drawDeck(matchDeck.deck_id, matchCardCount);
         for(i = 0; i < matchCardCount; i++){
@@ -1033,22 +1033,15 @@ app.post('/newMatch', async (request, response) => {
     }
 });
 
-
+/*
+    REST POST - Game MATCH.HBS FLIP Cards to check if match with previous card
+*/
 app.post('/flip/:id', async (request, response) => {
     try{
         var card_id = request.params.id;
         matchTurnScore--;
-        if(matchOne == undefined){
-            matchOne = card_id;
-        }else if(matchTwo == undefined){
-            matchTwo = card_id;
-            if(getNumeric(match_cards[matchOne].value) == getNumeric(match_cards[matchTwo].value)){
-                match_card_objs[matchOne].button = `<button class="btn btn-sm btn-light ${matchOne + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchOne + 1}">Flip</button>\n`
-                match_card_objs[matchTwo].button = `<button class="btn btn-sm btn-light ${matchTwo + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchTwo + 1}">Flip</button>\n`
 
-                matchedCount += 2;
-            }
-        }else{
+        if(matchOne != undefined && matchTwo != undefined){
 
             //Flip non-match cards back down
             if(getNumeric(match_cards[matchOne].value) != getNumeric(match_cards[matchTwo].value)){
@@ -1059,14 +1052,25 @@ app.post('/flip/:id', async (request, response) => {
             }else{
                 match_card_objs[matchOne].button = `<button class="btn btn-sm btn-light ${matchOne + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchOne + 1}">Flip</button>\n`
                 match_card_objs[matchTwo].button = `<button class="btn btn-sm btn-light ${matchTwo + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${matchTwo + 1}">Flip</button>\n`
-                matchedCount += 2;
             }
 
             //Reset match values
-            matchOne = card_id;
+            matchOne = undefined;
             matchTwo = undefined;
         }
 
+        if(matchOne == undefined){
+            //No first card
+            matchOne = card_id;
+
+        }else if(matchTwo == undefined){
+            //No second card
+            matchTwo = card_id;
+
+            if(getNumeric(match_cards[matchOne].value) == getNumeric(match_cards[matchTwo].value)){
+                matchedCount += 2;
+            }
+        }
         match_card_objs[card_id].button = `<button class="btn btn-sm btn-light ${card_id + 1}" style="width: 90%; font-size: 14px;border: red solid 2px;" disabled="true" name="flip${card_id + 1}">Flip</button>\n`
         match_card_objs[card_id].card = match_cards[card_id].image
 
@@ -1092,6 +1096,9 @@ app.post('/flip/:id', async (request, response) => {
     }
 });
 
+/*
+    Shuffles an array
+*/
 function shuffle(array) {
   var currentIndex = array.length, temporaryValue, randomIndex;
 
@@ -1111,6 +1118,9 @@ function shuffle(array) {
   return array;
 }
 
+/*
+    RENDER - Match.hbs
+*/
 function renderMatch(request, response, state, matchTurnScore, message, card_button_array) {
     response.render('match.hbs', {
         title: 'Match',
@@ -1126,14 +1136,21 @@ function renderMatch(request, response, state, matchTurnScore, message, card_but
     });
 }
 
-function resetVariables(){
+/*
+    Reset Match Game variables
+*/
+function resetMatchVariables(){
     matchTurnScore = matchCardCount * 3;
+    matchedCount = 0;
     match_card_objs = [];
     match_cards = [];
     matchOne = undefined;
     matchTwo = undefined;
 }
 
+/*
+    Save highscore if is user or else get the proper error message
+*/
 async function checkUserToSave(game_name, won, score){
     message = ""
     if(current_user != undefined){
@@ -1144,6 +1161,9 @@ async function checkUserToSave(game_name, won, score){
     return message;
 }
 
+/*
+    Disable all card flip functions for Match Game
+*/
 function disableMatchCards(){
     for(var i = 0; i < match_card_objs.length; i++){
         match_card_objs[i].button = `<button class="btn btn-sm btn-light ${i + 1}" style="width: 90%; font-size: 14px; visibility: hidden;" name="flip${i + 1}">Flip</button>\n`
@@ -1166,6 +1186,7 @@ BEGIN- JOKER GAME
 
 ******************************************************************************/
 
+//Joker Game Initial Values
 var jokerDeck = 0;
 var jokerHand = 0;
 var joker_cards = [];
@@ -1175,11 +1196,16 @@ var card_param = []
 var joker = "/img/joker.jpg";
 var joker_replaced = 0;
 
+/*
+    REST GET - JOKER.HBS 
+*/
 app.get('/joker', async (request, response) => {
     try {
 
         card_param = [];
         joker_cards = [];
+
+        //Initialize joker.hbs cards with player cardback
 
         for(i = 0; i < jokerCardCount; i++){
             card_param.push({
@@ -1197,6 +1223,9 @@ app.get('/joker', async (request, response) => {
     }
 });
 
+/*
+    REST POST - Start Game JOKER.HBS 
+*/
 app.post('/newjoker', async (request, response) => {
     try {
         card_param = [];
@@ -1233,7 +1262,9 @@ app.post('/newjoker', async (request, response) => {
     }
 });
 
-
+/*
+    REST POST - Game JOKER.HBS FLIP Cards to see if joker
+*/
 app.post('/jflip/:id', async (request, response) => {
 
     var card_id = request.params.id;
@@ -1241,34 +1272,48 @@ app.post('/jflip/:id', async (request, response) => {
     card_param[card_id].button = `<button style="width: 90%; font-size: 14px; visibility: hidden;">jflip</button>\n`
 
     if (joker_cards[card_id].value == "JOKER") {
+        //found joker
 
         message = await checkUserToSave('joker', true, jokerTurnScore);
         disableJokerCards();
         renderJoker(request, response, "disabled", jokerTurnScore, message, card_param);
 
     } else {
+        //didnt find joker
+
         jokerTurnScore -= 1;
         if (jokerTurnScore == 0){
+            //out of turns
+
             message = await checkUserToSave('joker', false, jokerTurnScore);
             disableJokerCards();
             renderJoker(request, response, "disabled", jokerTurnScore, message, card_param);
         }
         else{
+            //Keep playing, next turn
+
             renderJoker(request, response, "", jokerTurnScore, "", card_param);
         }
     }
 });
 
+/*
+    REST POST - Game JOKER.HBS Guess what the joker is
+*/
 app.post('/guessjoker', async (request, response) => {
     console.log(request.body.card);
     console.log(joker_replaced.code);
 
     if(joker_replaced.code == request.body.card){
+        //Correct guess
+
         message = await checkUserToSave('joker', true, jokerTurnScore * 2);
         disableJokerCards();
         renderJoker(request, response, "disabled", jokerTurnScore, message, card_param);
         console.log('You guessed right');
     }else{
+        //wrong Guess
+
         message = await checkUserToSave('joker', false, 0);
         disableJokerCards();
         renderJoker(request, response, "disabled", jokerTurnScore, message, card_param);
@@ -1277,6 +1322,9 @@ app.post('/guessjoker', async (request, response) => {
 
 });
 
+/*
+    RENDER - Joker.hbs
+*/
 function renderJoker(request, response, state, jokerTurnScore, message, card_button_array) {
     response.render('joker.hbs', {
         title: 'Joker',
@@ -1288,6 +1336,9 @@ function renderJoker(request, response, state, jokerTurnScore, message, card_but
     });
 }
 
+/*
+    Disables All joker cards flip function, happens usually on win or on lose.
+*/
 function disableJokerCards(){
     for(var i = 0; i < card_param.length; i++){
         card_param[i].button = `<button style="width: 90%; font-size: 14px; visibility: hidden;">jflip</button>\n`

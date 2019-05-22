@@ -496,5 +496,7 @@ module.exports = {
     deleteAccount,
     changeProfile,
     drawCardWithCode,
-    createBombsPile
+    createBombsPile,
+    highScoreString
+
 };
