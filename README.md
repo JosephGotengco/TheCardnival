@@ -4,7 +4,7 @@
 
 Demo Heroku Link: https://pickle-cardnival.herokuapp.com
 
-Note: It may take a few seconds to redeploy application on heroku.
+Note: It may take a few seconds to redeploy application on heroku. Individual sessions still in development.
 
 
 ## Centralized Card Game Hub
